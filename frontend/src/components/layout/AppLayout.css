@@ -1,0 +1,31 @@
+/* App Layout Grid */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.app-main-wrapper {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-width: 0;
+}
+
+.app-main-content {
+  flex: 1;
+  padding: 24px 28px;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .app-main-wrapper {
+    margin-left: 60px;
+  }
+
+  .app-main-content {
+    padding: 16px;
+  }
+}
