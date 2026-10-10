@@ -1,0 +1,87 @@
+.ui-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease-in-out;
+  overflow: hidden;
+  text-align: left;
+}
+
+/* Elevations */
+.card-elevation-none {
+  box-shadow: none;
+}
+
+.card-elevation-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.card-elevation-md {
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevation-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Padding */
+.card-padding-none {
+  padding: 0;
+}
+
+.card-padding-sm {
+  padding: 14px;
+}
+
+.card-padding-md {
+  padding: 20px;
+}
+
+.card-padding-lg {
+  padding: 28px;
+}
+
+/* Sub-elements */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card-header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-primary);
+}
+
+.card-header-action {
+  font-size: 13px;
+  color: var(--color-accent-indigo);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-header-action:hover {
+  text-decoration: underline;
+}
+
+.card-body {
+  flex: 1;
+}
+
+.card-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}

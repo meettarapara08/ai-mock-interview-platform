@@ -1,0 +1,55 @@
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  border: 1px solid transparent;
+  cursor: default;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+}
+
+.category-chip[role='button'] {
+  cursor: pointer;
+}
+
+.category-chip[role='button']:hover {
+  transform: translateY(-1px);
+}
+
+.chip-icon {
+  flex-shrink: 0;
+}
+
+/* Resume Interview */
+.chip-resume {
+  background-color: var(--color-accent-indigo-light);
+  color: var(--color-accent-indigo);
+  border-color: var(--color-accent-indigo-border);
+}
+
+/* Technical */
+.chip-technical {
+  background-color: var(--color-accent-cyan-light);
+  color: var(--color-accent-cyan-hover);
+  border-color: var(--color-accent-cyan-border);
+}
+
+/* Behavioral */
+.chip-behavioral {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+  border-color: var(--color-success-border);
+}
+
+/* HR */
+.chip-hr {
+  background-color: var(--color-warning-light);
+  color: #d97706;
+  border-color: var(--color-warning-border);
+}

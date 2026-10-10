@@ -1,0 +1,74 @@
+.score-meter-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.score-meter-gauge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gauge-svg {
+  transform: rotate(0deg);
+}
+
+.gauge-progress {
+  transition: stroke-dashoffset 0.6s ease-in-out;
+}
+
+.score-meter-text {
+  position: absolute;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-family: var(--font-sans);
+  pointer-events: none;
+}
+
+.score-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.score-divider {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-secondary);
+}
+
+.score-meter-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  min-width: 130px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  color: var(--color-secondary);
+  flex-grow: 1;
+}
+
+.legend-value {
+  font-weight: 600;
+  color: var(--color-primary);
+}
