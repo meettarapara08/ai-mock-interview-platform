@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   BotMessageSquare,
+  X,
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -27,21 +28,48 @@ const NAV_ITEMS = [
   { label: 'Settings', icon: Settings, path: '/settings' },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isOpen = false, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const handleNavClick = (path) => {
+    navigate(path);
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <aside className="sidebar" id="app-sidebar">
-      {/* Logo */}
-      <div className="sidebar-logo" onClick={() => navigate('/')}>
-        <div className="sidebar-logo-icon">
-          <BotMessageSquare size={24} />
+    <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`} id="app-sidebar">
+      {/* Logo & Mobile Close */}
+      <div className="sidebar-header-area">
+        <div
+          className="sidebar-logo"
+          onClick={() => handleNavClick('/')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') handleNavClick('/');
+          }}
+        >
+          <div className="sidebar-logo-icon">
+            <BotMessageSquare size={24} />
+          </div>
+          <div className="sidebar-logo-text">
+            <span className="sidebar-logo-title">AI Mock Interview</span>
+            <span className="sidebar-logo-tagline">Practice · Improve · Get Hired</span>
+          </div>
         </div>
-        <div className="sidebar-logo-text">
-          <span className="sidebar-logo-title">AI Mock Interview</span>
-          <span className="sidebar-logo-tagline">Practice · Improve · Get Hired</span>
-        </div>
+
+        {/* Mobile Close Button */}
+        <button
+          type="button"
+          className="sidebar-close-btn"
+          onClick={onClose}
+          aria-label="Close navigation menu"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -56,7 +84,7 @@ export function Sidebar() {
                   type="button"
                   id={`nav-${item.path.replace(/\//g, '').replace(/-/g, '_') || 'dashboard'}`}
                   className={`sidebar-nav-item ${isActive ? 'sidebar-nav-active' : ''}`}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => handleNavClick(item.path)}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon size={18} className="sidebar-nav-icon" />
@@ -86,3 +114,4 @@ export function Sidebar() {
 }
 
 export default Sidebar;
+

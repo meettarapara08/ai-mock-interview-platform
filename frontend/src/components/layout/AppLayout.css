@@ -3,6 +3,25 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--color-bg);
+  position: relative;
+}
+
+/* Mobile Sidebar Backdrop */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 95;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.sidebar-backdrop-active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .app-main-wrapper {
@@ -12,6 +31,7 @@
   flex-direction: column;
   min-height: 100vh;
   min-width: 0;
+  transition: margin-left 0.25s ease;
 }
 
 .app-main-content {
@@ -20,12 +40,25 @@
   overflow-x: hidden;
 }
 
+@media (max-width: 1024px) {
+  .app-main-content {
+    padding: 20px 24px;
+  }
+}
+
 @media (max-width: 768px) {
   .app-main-wrapper {
-    margin-left: 60px;
+    margin-left: 0;
   }
 
   .app-main-content {
-    padding: 16px;
+    padding: 16px 16px 32px;
   }
 }
+
+@media (max-width: 480px) {
+  .app-main-content {
+    padding: 12px 12px 28px;
+  }
+}
+

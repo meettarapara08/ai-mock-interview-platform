@@ -681,7 +681,7 @@
   gap: 6px;
   font-size: 12px;
   color: var(--color-secondary);
-  white-space: nowrap;
+  line-height: 1.4;
 }
 
 .dash-tip-check {
@@ -689,14 +689,16 @@
   flex-shrink: 0;
 }
 
-/* ─── Responsive ─── */
+/* ─── Responsive Media Queries ─── */
 @media (max-width: 1280px) {
   .dash-top-row {
     flex-direction: column;
   }
 
   .dash-stats-row {
+    display: flex;
     flex-wrap: wrap;
+    width: 100%;
   }
 
   .dash-stat-card {
@@ -718,36 +720,191 @@
   .dash-perf-content {
     grid-template-columns: 1fr 1fr;
   }
-}
 
-@media (max-width: 768px) {
-  .dash-modes-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dash-stats-row {
-    flex-direction: column;
-  }
-
-  .dash-stat-card {
-    min-width: auto;
-  }
-
-  .dash-perf-content {
-    grid-template-columns: 1fr;
-  }
-
-  .dash-progress-chart-area {
-    flex-direction: column;
-    align-items: center;
+  .dash-perf-insights {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
 
   .dash-quick-tips {
     flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
   }
 
   .dash-tips-list {
     justify-content: flex-start;
+    gap: 12px 20px;
+    width: 100%;
   }
 }
+
+@media (max-width: 768px) {
+  .dashboard {
+    gap: 20px;
+  }
+
+  .dash-welcome-card {
+    padding: 22px 24px;
+    gap: 18px;
+  }
+
+  .dash-welcome-illustration {
+    width: 140px;
+  }
+
+  .dash-welcome-name {
+    font-size: 23px;
+  }
+
+  /* 2x2 Grid for Stats prevents huge vertical scrolling */
+  .dash-stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  .dash-stat-card {
+    min-width: 0;
+    padding: 16px 14px;
+  }
+
+  .dash-modes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .dash-perf-content {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .dash-perf-insights {
+    grid-column: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dash-progress-chart-area {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .dash-progress-legend {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .dash-welcome-card {
+    padding: 18px 16px;
+    gap: 12px;
+  }
+
+  .dash-welcome-illustration {
+    width: 90px;
+  }
+
+  .dash-welcome-name {
+    font-size: 20px;
+  }
+
+  .dash-welcome-desc {
+    font-size: 12.5px;
+    margin-bottom: 14px;
+  }
+
+  .dash-welcome-cta {
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+
+  .dash-modes-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dash-mode-card {
+    padding: 16px;
+  }
+
+  .dash-activity-item {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .dash-activity-info {
+    min-width: calc(100% - 130px);
+  }
+
+  .dash-activity-score-col {
+    margin-left: auto;
+  }
+
+  .dash-activity-feedback-link {
+    width: 100%;
+    text-align: center;
+    padding: 7px 12px;
+  }
+
+  .dash-quick-tips {
+    padding: 14px 16px;
+  }
+
+  .dash-tips-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .dash-welcome-illustration {
+    display: none;
+  }
+
+  .dash-welcome-card {
+    padding: 16px 14px;
+  }
+
+  .dash-stats-row {
+    gap: 8px;
+  }
+
+  .dash-stat-card {
+    padding: 12px 8px;
+  }
+
+  .dash-stat-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 6px;
+  }
+
+  .dash-stat-value {
+    font-size: 19px;
+  }
+
+  .dash-stat-label {
+    font-size: 11px;
+  }
+
+  .dash-stat-trend {
+    font-size: 10px;
+  }
+
+  .dash-motivational-card {
+    padding: 10px 12px;
+  }
+
+  .dash-motivational-emoji {
+    font-size: 22px;
+  }
+}
+
