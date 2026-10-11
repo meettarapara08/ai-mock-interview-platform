@@ -29,6 +29,7 @@ import {
 } from 'recharts';
 
 import heroIllustration from '../assets/hero-illustration.jpg';
+import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 
 /* ─── Static Data ─── */
@@ -205,12 +206,16 @@ const QUICK_TIPS = [
 
 /* ─── Dashboard Component ─── */
 export function Dashboard() {
+  const { user } = useAuth();
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
   };
+
+  const userGreetingName = user?.first_name || user?.username || 'Candidate';
 
   return (
     <div className="dashboard" id="dashboard-page">
@@ -220,7 +225,7 @@ export function Dashboard() {
         <div className="dash-welcome-card" id="welcome-banner">
           <div className="dash-welcome-text">
             <span className="dash-welcome-greeting">{getGreeting()},</span>
-            <h1 className="dash-welcome-name">Meet Tarapara 👋</h1>
+            <h1 className="dash-welcome-name">{userGreetingName} 👋</h1>
             <p className="dash-welcome-desc">
               Ready to ace your next interview? Practice, get AI feedback,
               and build the skills you need for your dream job.

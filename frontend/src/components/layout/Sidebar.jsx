@@ -14,6 +14,7 @@ import {
   BotMessageSquare,
   X,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
 
 const NAV_ITEMS = [
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
 export function Sidebar({ isOpen = false, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const handleNavClick = (path) => {
     navigate(path);
@@ -38,6 +40,17 @@ export function Sidebar({ isOpen = false, onClose }) {
       onClose();
     }
   };
+
+  const handleLogout = async () => {
+    if (onClose) onClose();
+    await logout();
+    navigate('/login');
+  };
+
+  const userInitial = (user?.first_name?.[0] || user?.username?.[0] || 'U').toUpperCase();
+  const displayName = user?.first_name
+    ? `${user.first_name} ${user.last_name || ''}`.trim()
+    : user?.username || 'User';
 
   return (
     <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`} id="app-sidebar">
@@ -98,14 +111,32 @@ export function Sidebar({ isOpen = false, onClose }) {
 
       {/* User Footer */}
       <div className="sidebar-user-footer">
-        <div className="sidebar-user-info">
-          <div className="sidebar-user-avatar" aria-hidden="true">M</div>
+        <div
+          className="sidebar-user-info"
+          onClick={() => handleNavClick('/profile')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') handleNavClick('/profile');
+          }}
+          style={{ cursor: 'pointer' }}
+          title="View profile"
+        >
+          <div className="sidebar-user-avatar" aria-hidden="true">
+            {userInitial}
+          </div>
           <div className="sidebar-user-details">
-            <span className="sidebar-user-name">Meet Tarapara</span>
-            <span className="sidebar-user-email">meet@example.com</span>
+            <span className="sidebar-user-name">{displayName}</span>
+            <span className="sidebar-user-email">{user?.email || ''}</span>
           </div>
         </div>
-        <button type="button" className="sidebar-logout-btn" aria-label="Log out" title="Log out">
+        <button
+          type="button"
+          className="sidebar-logout-btn"
+          aria-label="Log out"
+          title="Log out"
+          onClick={handleLogout}
+        >
           <LogOut size={16} />
         </button>
       </div>
