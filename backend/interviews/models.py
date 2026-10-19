@@ -10,6 +10,7 @@ INTERVIEW_TYPE_CHOICES = [
     ('behavioral', 'Behavioral'),
     ('hr', 'HR'),
     ('managerial', 'Managerial'),
+    ('resume', 'Resume-Based'),
 ]
 
 DIFFICULTY_CHOICES = [
@@ -29,14 +30,74 @@ QUESTION_SOURCE_CHOICES = [
     ('fallback_bank', 'Fallback Bank'),
 ]
 
+RESUME_FORMAT_CHOICES = [
+    ('pdf', 'PDF'),
+    ('docx', 'DOCX'),
+]
+
+RESUME_STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('processing', 'Processing'),
+    ('completed', 'Completed'),
+    ('failed', 'Failed'),
+]
+
 
 # ─── Models ───
+
+class Resume(models.Model):
+    """Uploaded and parsed user resume."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='resumes',
+    )
+    file = models.FileField(upload_to='resumes/%Y/%m/')
+    file_name = models.CharField(max_length=255)
+    file_size = models.PositiveIntegerField(help_text="File size in bytes")
+    file_type = models.CharField(max_length=10, choices=RESUME_FORMAT_CHOICES)
+    raw_text = models.TextField(blank=True)
+    candidate_name = models.CharField(max_length=150, blank=True)
+    target_role = models.CharField(max_length=150, blank=True)
+    skills = models.JSONField(default=list, blank=True)
+    experience = models.JSONField(default=list, blank=True)
+    projects = models.JSONField(default=list, blank=True)
+    education = models.JSONField(default=list, blank=True)
+    certifications = models.JSONField(default=list, blank=True)
+    summary = models.TextField(blank=True)
+    processing_status = models.CharField(
+        max_length=20,
+        choices=RESUME_STATUS_CHOICES,
+        default='pending',
+    )
+    error_message = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['user', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"Resume for {self.user.username} ({self.file_name})"
+
 
 class InterviewSession(models.Model):
     """Represents a single interview practice session for a user."""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='interview_sessions',
+    )
+    resume = models.ForeignKey(
+        Resume,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='interview_sessions',
     )
     interview_type = models.CharField(

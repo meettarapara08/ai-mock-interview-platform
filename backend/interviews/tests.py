@@ -1,7 +1,8 @@
 import os
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from interviews.models import InterviewSession, InterviewQuestion, InterviewAnswer
+from django.core.files.uploadedfile import SimpleUploadedFile
+from interviews.models import InterviewSession, InterviewQuestion, InterviewAnswer, Resume
 
 
 class InterviewAPITestCase(TestCase):
@@ -42,7 +43,9 @@ class InterviewAPITestCase(TestCase):
         self.assertIn('difficulties', data)
         self.assertIn('suggested_job_roles', data)
         self.assertIn('question_range', data)
-        self.assertEqual(len(data['interview_types']), 4)
+        self.assertEqual(len(data['interview_types']), 5)
+        type_values = [t['value'] for t in data['interview_types']]
+        self.assertIn('resume', type_values)
         self.assertEqual(len(data['difficulties']), 3)
 
     def test_config_requires_auth(self):
@@ -418,4 +421,222 @@ class InterviewAPITestCase(TestCase):
     def test_dashboard_analytics_requires_auth(self):
         self.client.logout()
         response = self.client.get('/api/interviews/dashboard/')
+        self.assertEqual(response.status_code, 403)
+
+    # ─── Resume Tests ───
+
+    def _create_sample_pdf_bytes(self):
+        import fitz
+        doc = fitz.open()
+        page = doc.new_page()
+        page.insert_text(
+            (50, 72),
+            "John Doe\nSoftware Engineer\nSkills: Python, Django, React, PostgreSQL, Docker\n"
+            "Experience: Built scalable microservices at Acme Corp.\n"
+            "Projects: E-Commerce Store with Django and React."
+        )
+        pdf_bytes = doc.write()
+        doc.close()
+        return pdf_bytes
+
+    def _create_sample_docx_bytes(self):
+        import docx
+        import io
+        doc = docx.Document()
+        doc.add_heading("Jane Smith", 0)
+        doc.add_paragraph("Full Stack Developer with experience in Python, React, and AWS.")
+        doc.add_paragraph("Projects: Realtime Chat Application using WebSockets and Redis.")
+        stream = io.BytesIO()
+        doc.save(stream)
+        return stream.getvalue()
+
+    def test_resume_upload_pdf(self):
+        pdf_bytes = self._create_sample_pdf_bytes()
+        upload_file = SimpleUploadedFile("my_resume.pdf", pdf_bytes, content_type="application/pdf")
+
+        response = self.client.post(
+            '/api/interviews/resumes/upload/',
+            {'file': upload_file},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data['file_name'], 'my_resume.pdf')
+        self.assertEqual(data['file_type'], 'pdf')
+        self.assertEqual(data['processing_status'], 'completed')
+        self.assertTrue(data['is_active'])
+        self.assertIn('skills', data)
+        self.assertGreater(len(data['skills']), 0)
+
+    def test_resume_upload_docx(self):
+        docx_bytes = self._create_sample_docx_bytes()
+        upload_file = SimpleUploadedFile(
+            "my_resume.docx",
+            docx_bytes,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+
+        response = self.client.post(
+            '/api/interviews/resumes/upload/',
+            {'file': upload_file},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data['file_name'], 'my_resume.docx')
+        self.assertEqual(data['file_type'], 'docx')
+        self.assertEqual(data['processing_status'], 'completed')
+
+    def test_resume_upload_unsupported_file_type(self):
+        upload_file = SimpleUploadedFile("script.exe", b"binarycontent", content_type="application/octet-stream")
+        response = self.client.post(
+            '/api/interviews/resumes/upload/',
+            {'file': upload_file},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_get_active_resume(self):
+        # When no resume exists
+        response = self.client.get('/api/interviews/resumes/active/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.json()['resume'])
+
+        # Upload a resume
+        pdf_bytes = self._create_sample_pdf_bytes()
+        upload_file = SimpleUploadedFile("my_resume.pdf", pdf_bytes, content_type="application/pdf")
+        self.client.post('/api/interviews/resumes/upload/', {'file': upload_file}, format='multipart')
+
+        response = self.client.get('/api/interviews/resumes/active/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.json()['resume'])
+        self.assertEqual(response.json()['resume']['file_name'], 'my_resume.pdf')
+
+    def test_resume_isolation_and_delete(self):
+        # Create resume for user
+        pdf_bytes = self._create_sample_pdf_bytes()
+        upload_file = SimpleUploadedFile("user_resume.pdf", pdf_bytes, content_type="application/pdf")
+        res = self.client.post('/api/interviews/resumes/upload/', {'file': upload_file}, format='multipart')
+        resume_id = res.json()['id']
+
+        # Log in as other_user and verify 404
+        self.client.login(username='otheruser', password='OtherPassword123!')
+        res_other = self.client.get(f'/api/interviews/resumes/{resume_id}/')
+        self.assertEqual(res_other.status_code, 404)
+
+        del_other = self.client.delete(f'/api/interviews/resumes/{resume_id}/')
+        self.assertEqual(del_other.status_code, 404)
+
+        # Log back in as owner and delete successfully
+        self.client.login(username='interviewtester', password='TestPassword123!')
+        del_res = self.client.delete(f'/api/interviews/resumes/{resume_id}/')
+        self.assertEqual(del_res.status_code, 200)
+
+        # Verify it no longer exists
+        get_res = self.client.get(f'/api/interviews/resumes/{resume_id}/')
+        self.assertEqual(get_res.status_code, 404)
+
+    def test_create_and_start_resume_session(self):
+        # First try creating resume session without resume -> should fail
+        response = self.client.post(
+            '/api/interviews/sessions/',
+            {
+                'interview_type': 'resume',
+                'job_role': 'Full Stack Developer',
+                'difficulty': 'medium',
+                'total_questions': 3,
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+
+        # Now upload resume
+        pdf_bytes = self._create_sample_pdf_bytes()
+        upload_file = SimpleUploadedFile("my_resume.pdf", pdf_bytes, content_type="application/pdf")
+        res_upload = self.client.post('/api/interviews/resumes/upload/', {'file': upload_file}, format='multipart')
+        resume_id = res_upload.json()['id']
+
+        # Create session with resume
+        response = self.client.post(
+            '/api/interviews/sessions/',
+            {
+                'interview_type': 'resume',
+                'job_role': 'Full Stack Developer',
+                'difficulty': 'medium',
+                'total_questions': 3,
+                'resume_id': resume_id,
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        session_id = response.json()['id']
+        self.assertEqual(response.json()['interview_type'], 'resume')
+        self.assertEqual(response.json()['resume_id'], resume_id)
+
+        # Start the session
+        start_res = self.client.post(f'/api/interviews/sessions/{session_id}/start/')
+        self.assertEqual(start_res.status_code, 200)
+        start_data = start_res.json()
+        self.assertEqual(start_data['status'], 'in_progress')
+        self.assertIn('current_question', start_data)
+        self.assertGreater(len(start_data['current_question']['question_text']), 10)
+
+    # ─── Detailed Analytics Tests ───
+
+    def test_detailed_analytics_empty(self):
+        response = self.client.get('/api/interviews/analytics/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('summary', data)
+        self.assertIn('score_trend', data)
+        self.assertIn('competencies', data)
+        self.assertIn('categories', data)
+        self.assertIn('difficulty_breakdown', data)
+        self.assertIn('coding_analytics', data)
+        self.assertIn('ai_insights', data)
+        self.assertIn('recent_interviews', data)
+        self.assertEqual(data['summary']['total_interviews'], 0)
+        self.assertEqual(data['summary']['completed_interviews'], 0)
+        self.assertEqual(len(data['score_trend']), 0)
+        self.assertEqual(len(data['categories']), 5)
+
+    def test_detailed_analytics_populated(self):
+        # Create a completed session with evaluation
+        session = InterviewSession.objects.create(
+            user=self.user,
+            interview_type='technical',
+            job_role='Software Engineer',
+            difficulty='medium',
+            total_questions=3,
+            status='completed',
+            overall_score=88.5,
+        )
+        q = InterviewQuestion.objects.create(session=session, question_text="Q1", question_order=0)
+        ans = InterviewAnswer.objects.create(question=q, answer_text="My solid answer here")
+        from interviews.models import InterviewEvaluation
+        InterviewEvaluation.objects.create(
+            answer=ans,
+            knowledge_score=90,
+            relevance_score=85,
+            completeness_score=88,
+            communication_score=91,
+            overall_score=88.5,
+            strengths=["Strong fundamentals"],
+            weaknesses=["Add more examples"],
+            suggestions=["Keep practicing"],
+        )
+
+        response = self.client.get('/api/interviews/analytics/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['summary']['total_interviews'], 1)
+        self.assertEqual(data['summary']['completed_interviews'], 1)
+        self.assertEqual(data['summary']['average_interview_score'], 88.5)
+        self.assertEqual(len(data['score_trend']), 1)
+        self.assertEqual(data['score_trend'][0]['score'], 88.5)
+        self.assertEqual(data['competencies']['knowledge']['score'], 90)
+        self.assertEqual(data['competencies']['knowledge']['level'], 'Expert')
+        self.assertIn("Strong fundamentals", data['ai_insights']['strengths'])
+
+    def test_detailed_analytics_requires_auth(self):
+        self.client.logout()
+        response = self.client.get('/api/interviews/analytics/')
         self.assertEqual(response.status_code, 403)

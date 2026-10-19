@@ -9,11 +9,26 @@ from interviews.views import (
     InterviewCompleteView,
     InterviewReportView,
     DashboardAnalyticsView,
+    UserDetailedAnalyticsView,
+    ResumeUploadView,
+    ResumeListView,
+    ActiveResumeView,
+    ResumeDetailView,
 )
 
 urlpatterns = [
+    # Configuration and Analytics
     path('config/', InterviewConfigView.as_view(), name='interview_config'),
     path('dashboard/', DashboardAnalyticsView.as_view(), name='interview_dashboard'),
+    path('analytics/', UserDetailedAnalyticsView.as_view(), name='interview_analytics'),
+
+    # Resumes
+    path('resumes/upload/', ResumeUploadView.as_view(), name='resume_upload'),
+    path('resumes/active/', ActiveResumeView.as_view(), name='resume_active'),
+    path('resumes/<int:resume_id>/', ResumeDetailView.as_view(), name='resume_detail'),
+    path('resumes/', ResumeListView.as_view(), name='resume_list'),
+
+    # Sessions
     path('sessions/', InterviewSessionListCreateView.as_view(), name='interview_sessions'),
     path('sessions/<int:session_id>/', InterviewSessionDetailView.as_view(), name='interview_session_detail'),
     path('sessions/<int:session_id>/start/', InterviewStartView.as_view(), name='interview_start'),

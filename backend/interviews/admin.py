@@ -5,7 +5,16 @@ from interviews.models import (
     InterviewAnswer,
     InterviewEvaluation,
     QuestionBank,
+    Resume,
 )
+
+
+@admin.register(Resume)
+class ResumeAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'file_name', 'target_role', 'processing_status', 'is_active', 'created_at']
+    list_filter = ['processing_status', 'is_active', 'file_type']
+    search_fields = ['user__username', 'file_name', 'target_role', 'candidate_name']
+    readonly_fields = ['created_at', 'updated_at']
 
 
 class InterviewQuestionInline(admin.TabularInline):

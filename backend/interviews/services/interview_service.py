@@ -67,6 +67,30 @@ def start_session(session, user_skills=''):
             f"Only sessions in 'Setup' status can be started."
         )
 
+    # If resume interview, retrieve resume context
+    resume_data = None
+    resume = session.resume
+    if not resume and session.interview_type == 'resume':
+        resume = session.user.resumes.filter(is_active=True).first()
+        if resume:
+            session.resume = resume
+            session.save(update_fields=['resume'])
+
+    if resume:
+        resume_data = {
+            'candidate_name': resume.candidate_name,
+            'target_role': resume.target_role,
+            'summary': resume.summary,
+            'skills': resume.skills,
+            'experience': resume.experience,
+            'projects': resume.projects,
+            'education': resume.education,
+            'certifications': resume.certifications,
+            'raw_text': resume.raw_text,
+        }
+        if not user_skills and resume.skills:
+            user_skills = ', '.join(resume.skills) if isinstance(resume.skills, list) else str(resume.skills)
+
     # Generate questions via Gemini
     ai_questions = generate_questions(
         interview_type=session.interview_type,
@@ -74,6 +98,7 @@ def start_session(session, user_skills=''):
         difficulty=session.difficulty,
         num_questions=session.total_questions,
         user_skills=user_skills,
+        resume_data=resume_data,
     )
 
     is_ai = ai_questions is not None
@@ -447,6 +472,7 @@ def get_user_dashboard_analytics(user):
         'behavioral': {'name': 'Behavioral', 'color': '#06b6d4'},
         'hr': {'name': 'HR Round', 'color': '#f59e0b'},
         'managerial': {'name': 'Managerial', 'color': '#16a34a'},
+        'resume': {'name': 'Resume-Based', 'color': '#8b5cf6'},
     }
     category_breakdown = []
     for cat_key, meta in category_meta.items():
@@ -556,4 +582,249 @@ def get_user_dashboard_analytics(user):
             'areas_to_improve': areas_to_improve,
         },
         'recent_activity': recent_activity,
+    }
+
+
+def get_detailed_user_analytics(user):
+    """
+    Computes comprehensive user progress and analytics across mock interviews
+    and coding practice sessions from real database records.
+    """
+    now = timezone.now()
+    month_ago = now - timezone.timedelta(days=30)
+
+    sessions = InterviewSession.objects.filter(user=user).order_by('-created_at')
+    total_interviews = sessions.count()
+    completed_sessions = list(sessions.filter(status='completed'))
+    completed_count = len(completed_sessions)
+    in_progress_count = sessions.filter(status='in_progress').count()
+
+    scores = [s.overall_score for s in completed_sessions if s.overall_score is not None]
+    average_score = round(sum(scores) / len(scores), 1) if scores else 0
+    highest_score = round(max(scores), 1) if scores else 0
+
+    total_questions_answered = InterviewAnswer.objects.filter(
+        question__session__user=user,
+    ).count()
+
+    # Practice time (est. 2.5 mins per question answered)
+    est_hours = round((total_questions_answered * 2.5) / 60.0, 1)
+
+    interviews_this_month = sessions.filter(created_at__gte=month_ago).count()
+
+    # Coding analytics
+    total_problems = 0
+    coding_problems_solved = 0
+    coding_problems_attempted = 0
+    coding_acceptance_rate = 0.0
+    easy_solved = 0
+    medium_solved = 0
+    hard_solved = 0
+    language_breakdown = []
+
+    try:
+        from coding.models import CodingProblem, CodingSubmission
+        total_problems = CodingProblem.objects.count()
+        user_submissions = CodingSubmission.objects.filter(user=user)
+        total_subs = user_submissions.count()
+
+        if total_subs > 0:
+            accepted_subs = user_submissions.filter(status='accepted')
+            accepted_ids = set(accepted_subs.values_list('problem_id', flat=True))
+            coding_problems_solved = len(accepted_ids)
+            coding_problems_attempted = len(set(user_submissions.values_list('problem_id', flat=True)))
+            coding_acceptance_rate = round((accepted_subs.count() / total_subs) * 100, 1)
+
+            easy_solved = CodingProblem.objects.filter(id__in=accepted_ids, difficulty='easy').count()
+            medium_solved = CodingProblem.objects.filter(id__in=accepted_ids, difficulty='medium').count()
+            hard_solved = CodingProblem.objects.filter(id__in=accepted_ids, difficulty='hard').count()
+
+            # Language breakdown
+            lang_counts = {}
+            for sub in user_submissions:
+                lang_display = sub.get_language_display()
+                lang_counts[lang_display] = lang_counts.get(lang_display, 0) + 1
+            language_breakdown = [{'language': k, 'count': v} for k, v in lang_counts.items()]
+    except Exception as exc:
+        logger.warning("Could not compute coding analytics: %s", exc)
+
+    # Historical score trend (chronological order of completed sessions)
+    score_trend = []
+    completed_chronological = sorted(completed_sessions, key=lambda s: s.completed_at or s.created_at)
+    for s in completed_chronological:
+        dt = s.completed_at or s.created_at
+        score_trend.append({
+            'session_id': s.pk,
+            'date': dt.strftime('%Y-%m-%d'),
+            'display_date': dt.strftime('%b %d'),
+            'score': round(s.overall_score, 1) if s.overall_score is not None else 0,
+            'type': s.get_interview_type_display(),
+            'role': s.job_role,
+            'difficulty': s.get_difficulty_display(),
+        })
+
+    # Core competencies
+    evaluations = InterviewEvaluation.objects.filter(answer__question__session__user=user)
+    eval_count = evaluations.count()
+
+    def _qualitative_level(score):
+        if score >= 85:
+            return 'Expert'
+        if score >= 70:
+            return 'Proficient'
+        if score >= 55:
+            return 'Developing'
+        return 'Novice'
+
+    if eval_count > 0:
+        avg_knowledge = round(sum(e.knowledge_score for e in evaluations) / eval_count, 1)
+        avg_relevance = round(sum(e.relevance_score for e in evaluations) / eval_count, 1)
+        avg_completeness = round(sum(e.completeness_score for e in evaluations) / eval_count, 1)
+        avg_communication = round(sum(e.communication_score for e in evaluations) / eval_count, 1)
+
+        all_strengths = []
+        all_improvements = []
+        for e in evaluations:
+            all_strengths.extend(e.strengths or [])
+            all_improvements.extend(e.suggestions or e.weaknesses or [])
+
+        strengths = list(dict.fromkeys([s.strip() for s in all_strengths if s.strip()]))[:4]
+        weaknesses = list(dict.fromkeys([s.strip() for s in all_improvements if s.strip()]))[:4]
+
+        # Dynamic recommendation based on lowest competency
+        min_comp = min(
+            ('Knowledge', avg_knowledge),
+            ('Relevance', avg_relevance),
+            ('Completeness', avg_completeness),
+            ('Communication', avg_communication),
+            key=lambda x: x[1],
+        )
+
+        if min_comp[0] == 'Knowledge':
+            recommended_focus = "Deepen technical concepts and system architecture fundamentals."
+        elif min_comp[0] == 'Relevance':
+            recommended_focus = "Focus on directly answering the core prompt without digressing."
+        elif min_comp[0] == 'Completeness':
+            recommended_focus = "Provide thorough explanations covering constraints, testing, and edge cases."
+        else:
+            recommended_focus = "Enhance communication clarity and structure your answers with the STAR method."
+    else:
+        avg_knowledge = 0
+        avg_relevance = 0
+        avg_completeness = 0
+        avg_communication = 0
+        strengths = [
+            'Ready to start personalized AI mock interview practice',
+            'Comprehensive interview modes available (Technical, Behavioral, HR, Managerial, Resume)',
+        ]
+        weaknesses = [
+            'Complete your first interview session to unlock detailed AI evaluation insights',
+        ]
+        recommended_focus = "Start your first mock interview or solve a coding challenge to establish your baseline."
+
+    competencies = {
+        'knowledge': {'score': int(avg_knowledge), 'level': _qualitative_level(avg_knowledge)},
+        'relevance': {'score': int(avg_relevance), 'level': _qualitative_level(avg_relevance)},
+        'completeness': {'score': int(avg_completeness), 'level': _qualitative_level(avg_completeness)},
+        'communication': {'score': int(avg_communication), 'level': _qualitative_level(avg_communication)},
+        'radar_data': [
+            {'subject': 'Knowledge', 'score': int(avg_knowledge), 'fullMark': 100},
+            {'subject': 'Relevance', 'score': int(avg_relevance), 'fullMark': 100},
+            {'subject': 'Completeness', 'score': int(avg_completeness), 'fullMark': 100},
+            {'subject': 'Communication', 'score': int(avg_communication), 'fullMark': 100},
+        ],
+        'competency_bars': [
+            {'label': 'Technical Knowledge', 'score': int(avg_knowledge), 'level': _qualitative_level(avg_knowledge), 'color': '#4F46E5'},
+            {'label': 'Answer Relevance', 'score': int(avg_relevance), 'level': _qualitative_level(avg_relevance), 'color': '#06b6d4'},
+            {'label': 'Solution Completeness', 'score': int(avg_completeness), 'level': _qualitative_level(avg_completeness), 'color': '#16a34a'},
+            {'label': 'Communication Clarity', 'score': int(avg_communication), 'level': _qualitative_level(avg_communication), 'color': '#f59e0b'},
+        ],
+    }
+
+    # Categories breakdown
+    categories_meta = [
+        ('technical', 'Technical', '#4F46E5'),
+        ('behavioral', 'Behavioral', '#06b6d4'),
+        ('hr', 'HR Round', '#f59e0b'),
+        ('managerial', 'Managerial', '#16a34a'),
+        ('resume', 'Resume-Based', '#8b5cf6'),
+    ]
+    categories = []
+    for cat_key, cat_name, color in categories_meta:
+        cat_sess = [s for s in completed_sessions if s.interview_type == cat_key]
+        cat_scores = [s.overall_score for s in cat_sess if s.overall_score is not None]
+        cat_avg = round(sum(cat_scores) / len(cat_scores), 1) if cat_scores else 0
+        categories.append({
+            'type': cat_key,
+            'name': cat_name,
+            'count': len(cat_sess),
+            'avg_score': cat_avg,
+            'color': color,
+        })
+
+    # Difficulty breakdown
+    diff_meta = [('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')]
+    difficulty_breakdown = []
+    for diff_key, diff_name in diff_meta:
+        d_sess = [s for s in completed_sessions if s.difficulty == diff_key]
+        d_scores = [s.overall_score for s in d_sess if s.overall_score is not None]
+        d_avg = round(sum(d_scores) / len(d_scores), 1) if d_scores else 0
+        difficulty_breakdown.append({
+            'difficulty': diff_name,
+            'count': len(d_sess),
+            'avg_score': d_avg,
+        })
+
+    # Recent completed/active interviews
+    recent_interviews = []
+    for s in sessions[:8]:
+        recent_interviews.append({
+            'id': s.pk,
+            'interview_type': s.interview_type,
+            'type_display': s.get_interview_type_display(),
+            'job_role': s.job_role,
+            'difficulty': s.difficulty,
+            'difficulty_display': s.get_difficulty_display(),
+            'overall_score': round(s.overall_score, 1) if s.overall_score is not None else None,
+            'date': s.created_at.strftime('%b %d, %Y'),
+            'status': s.status,
+            'status_display': s.get_status_display(),
+            'questions_count': s.total_questions,
+        })
+
+    return {
+        'summary': {
+            'total_interviews': total_interviews,
+            'completed_interviews': completed_count,
+            'in_progress_interviews': in_progress_count,
+            'average_interview_score': average_score,
+            'highest_score': highest_score,
+            'total_questions_answered': total_questions_answered,
+            'total_practice_hours': est_hours,
+            'coding_problems_solved': coding_problems_solved,
+            'coding_problems_attempted': coding_problems_attempted,
+            'coding_total_problems': total_problems,
+            'coding_acceptance_rate': coding_acceptance_rate,
+            'interviews_this_month': interviews_this_month,
+        },
+        'score_trend': score_trend,
+        'competencies': competencies,
+        'categories': categories,
+        'difficulty_breakdown': difficulty_breakdown,
+        'coding_analytics': {
+            'total_solved': coding_problems_solved,
+            'total_attempted': coding_problems_attempted,
+            'total_problems': total_problems,
+            'easy_solved': easy_solved,
+            'medium_solved': medium_solved,
+            'hard_solved': hard_solved,
+            'acceptance_rate': coding_acceptance_rate,
+            'language_breakdown': language_breakdown,
+        },
+        'ai_insights': {
+            'strengths': strengths,
+            'weaknesses': weaknesses,
+            'recommended_focus': recommended_focus,
+        },
+        'recent_interviews': recent_interviews,
     }

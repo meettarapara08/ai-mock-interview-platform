@@ -14,6 +14,8 @@ import InterviewResult from './pages/InterviewResult';
 import InterviewHistory from './pages/InterviewHistory';
 import CodingProblemsList from './pages/CodingProblemsList';
 import CodingWorkspace from './pages/CodingWorkspace';
+import ResumeInterview from './pages/ResumeInterview';
+import Analytics from './pages/Analytics';
 
 import './App.css';
 
@@ -43,11 +45,11 @@ export function App() {
             <Route path="/behavioral-interview" element={<Navigate to="/interview/setup?type=behavioral" replace />} />
             <Route path="/hr-interview" element={<Navigate to="/interview/setup?type=hr" replace />} />
 
-            {/* Other pending feature placeholders */}
-            <Route path="/resume-interview" element={<PlaceholderPage title="Resume-Based Interview" />} />
+            {/* Resume-Based Interview */}
+            <Route path="/resume-interview" element={<ResumeInterview />} />
             <Route path="/coding-practice" element={<CodingProblemsList />} />
             <Route path="/coding-practice/:slug" element={<CodingWorkspace />} />
-            <Route path="/analytics" element={<PlaceholderPage title="Progress & Analytics" />} />
+            <Route path="/analytics" element={<Analytics />} />
           </Route>
         </Route>
 

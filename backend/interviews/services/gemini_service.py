@@ -117,12 +117,105 @@ def _gemini_call_with_retry(prompt, response_schema_hint=''):
 
 # ─── Question Generation ───
 
-def generate_questions(interview_type, job_role, difficulty, num_questions, user_skills=''):
+def generate_resume_questions(resume_data, job_role, difficulty, num_questions):
+    """
+    Generate targeted interview questions based on the candidate's actual resume data.
+    """
+    name = resume_data.get('candidate_name', '')
+    summary = resume_data.get('summary', '')
+    skills_list = resume_data.get('skills', [])
+    skills_str = ', '.join(skills_list) if isinstance(skills_list, list) else str(skills_list)
+
+    # Format projects
+    projects = resume_data.get('projects', [])
+    formatted_projects = "None listed"
+    if projects and isinstance(projects, list):
+        p_items = []
+        for p in projects[:4]:
+            if isinstance(p, dict):
+                title = p.get('title', 'Project')
+                tech = ', '.join(p.get('technologies', [])) if isinstance(p.get('technologies'), list) else ''
+                desc = p.get('description', '')
+                p_items.append(f"- {title} ({tech}): {desc}")
+            else:
+                p_items.append(f"- {p}")
+        formatted_projects = "\n  ".join(p_items)
+
+    # Format work experience
+    experience = resume_data.get('experience', [])
+    formatted_experience = "None listed"
+    if experience and isinstance(experience, list):
+        e_items = []
+        for exp in experience[:3]:
+            if isinstance(exp, dict):
+                role = exp.get('role', 'Role')
+                company = exp.get('company', 'Company')
+                highlights = '; '.join(exp.get('highlights', [])) if isinstance(exp.get('highlights'), list) else ''
+                e_items.append(f"- {role} at {company}: {highlights}")
+            else:
+                e_items.append(f"- {exp}")
+        formatted_experience = "\n  ".join(e_items)
+
+    prompt = f"""You are a principal engineering hiring manager conducting a resume-based interview for a {job_role} position at {difficulty} difficulty.
+Review the candidate's verified resume profile below and generate exactly {num_questions} targeted interview questions.
+
+CANDIDATE RESUME PROFILE:
+Candidate Name: {name or 'Candidate'}
+Professional Summary: {summary or 'N/A'}
+Skills: {skills_str or 'N/A'}
+Notable Projects:
+  {formatted_projects}
+Work Experience:
+  {formatted_experience}
+
+REQUIREMENTS:
+- Each question must directly reference specific projects, technologies, or work experience claimed on this resume.
+- For projects: Ask about architectural decisions, tradeoffs, performance optimizations, and challenges faced.
+- For work experience: Ask about specific responsibilities, problem-solving, and collaboration.
+- For claimed skills: Test practical hands-on application and real-world edge cases.
+- Calibrate question depth for difficulty level "{difficulty}".
+- Questions should progress from reviewing their featured projects to deeper technical and behavioral scrutiny.
+
+Return a JSON object with this exact structure:
+{{
+  "questions": [
+    "In your project [Project Name], you mentioned using [Technology]. What was the biggest technical bottleneck you encountered and how did you resolve it?",
+    "Question 2 text here"
+  ]
+}}
+
+Return exactly {num_questions} questions. Each question should be a single string."""
+
+    result = _gemini_call_with_retry(prompt)
+    if result is None:
+        return None
+
+    questions = result.get('questions', [])
+    if not isinstance(questions, list) or len(questions) == 0:
+        logger.error('Gemini returned invalid resume questions structure: %s', result)
+        return None
+
+    validated = [str(q).strip() for q in questions if q and str(q).strip()]
+    if len(validated) == 0:
+        logger.error('All Gemini resume questions were empty after validation')
+        return None
+
+    return validated[:num_questions]
+
+
+def generate_questions(interview_type, job_role, difficulty, num_questions, user_skills='', resume_data=None):
     """
     Generate interview questions using Gemini.
+    If interview_type == 'resume' and resume_data is provided, generates
+    resume-customized questions.
 
     Returns a list of question strings, or None if Gemini is unavailable.
     """
+    if interview_type == 'resume' and resume_data:
+        res = generate_resume_questions(resume_data, job_role, difficulty, num_questions)
+        if res:
+            return res
+
     skills_context = ''
     if user_skills:
         skills_context = f"\nThe candidate's skills include: {user_skills}."
@@ -137,6 +230,7 @@ Requirements:
 - For behavioral interviews: use the STAR method format (Situation, Task, Action, Result).
 - For HR interviews: focus on company culture fit, salary expectations, career goals, and work preferences.
 - For managerial interviews: focus on leadership, team management, conflict resolution, and strategic thinking.
+- For resume interviews: focus on projects, work experience, and applied skills.
 - Difficulty "{difficulty}" means:
   - easy: entry-level, straightforward questions
   - medium: intermediate questions requiring some experience

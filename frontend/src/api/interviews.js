@@ -24,14 +24,18 @@ export async function getDashboardAnalytics() {
 /**
  * Create a new interview session.
  */
-export async function createSession({ interview_type, job_role, difficulty, total_questions }) {
+export async function createSession({ interview_type, job_role, difficulty, total_questions, resume_id }) {
   await ensureCsrfToken();
-  const res = await apiClient.post('/api/interviews/sessions/', {
+  const payload = {
     interview_type,
     job_role,
     difficulty,
     total_questions,
-  });
+  };
+  if (resume_id) {
+    payload.resume_id = resume_id;
+  }
+  const res = await apiClient.post('/api/interviews/sessions/', payload);
   return res.data;
 }
 
@@ -93,5 +97,13 @@ export async function completeSession(sessionId) {
  */
 export async function getSessionReport(sessionId) {
   const res = await apiClient.get(`/api/interviews/sessions/${sessionId}/report/`);
+  return res.data;
+}
+
+/**
+ * Get comprehensive user progress and analytics across mock interviews and coding.
+ */
+export async function getUserAnalytics() {
+  const res = await apiClient.get('/api/interviews/analytics/');
   return res.data;
 }

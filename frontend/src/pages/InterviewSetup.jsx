@@ -5,6 +5,7 @@ import {
   User,
   Users,
   Briefcase,
+  FileText,
   Play,
   ChevronLeft,
   Loader2,
@@ -20,6 +21,7 @@ const TYPE_ICONS = {
   behavioral: User,
   hr: Users,
   managerial: Briefcase,
+  resume: FileText,
 };
 
 const TYPE_COLORS = {
@@ -27,6 +29,7 @@ const TYPE_COLORS = {
   behavioral: { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
   hr: { bg: '#eef2ff', color: '#4F46E5', border: '#c7d2fe' },
   managerial: { bg: '#fefce8', color: '#eab308', border: '#fde68a' },
+  resume: { bg: '#eef2ff', color: '#4F46E5', border: '#c7d2fe' },
 };
 
 const DIFFICULTY_INFO = {
@@ -55,6 +58,10 @@ export function InterviewSetup() {
 
   useEffect(() => {
     const t = searchParams.get('type');
+    if (t === 'resume') {
+      navigate('/resume-interview');
+      return;
+    }
     if (t) {
       setInterviewType(t === 'hr-managerial' ? 'hr' : t);
     }
@@ -62,7 +69,7 @@ export function InterviewSetup() {
     if (r) {
       setJobRole(r);
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     async function loadConfig() {
@@ -180,7 +187,13 @@ export function InterviewSetup() {
                   '--type-color': colors.color,
                   '--type-border': isSelected ? colors.color : 'var(--color-border)',
                 }}
-                onClick={() => setInterviewType(type.value)}
+                onClick={() => {
+                  if (type.value === 'resume') {
+                    navigate('/resume-interview');
+                  } else {
+                    setInterviewType(type.value);
+                  }
+                }}
                 id={`type-${type.value}`}
               >
                 <div

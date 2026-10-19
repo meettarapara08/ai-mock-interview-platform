@@ -291,15 +291,13 @@ export function Dashboard() {
           <div className="dash-modes-grid">
             {INTERVIEW_MODES.map((mode) => {
               const Icon = mode.icon;
-              const modeTypeMap = {
-                technical: 'technical',
-                behavioral: 'behavioral',
-                'hr-managerial': 'hr',
-                'resume-based': '',
+              const modePathMap = {
+                technical: '/interview/setup?type=technical',
+                behavioral: '/interview/setup?type=behavioral',
+                'hr-managerial': '/interview/setup?type=hr',
+                'resume-based': '/resume-interview',
               };
-              const targetPath = modeTypeMap[mode.id]
-                ? `/interview/setup?type=${modeTypeMap[mode.id]}`
-                : '/interview/setup';
+              const targetPath = modePathMap[mode.id] || '/interview/setup';
 
               return (
                 <div

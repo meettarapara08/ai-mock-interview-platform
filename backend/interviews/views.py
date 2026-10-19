@@ -2,8 +2,15 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.core.exceptions import ValidationError
 
-from interviews.models import InterviewSession, INTERVIEW_TYPE_CHOICES, DIFFICULTY_CHOICES
+from interviews.models import (
+    InterviewSession,
+    Resume,
+    INTERVIEW_TYPE_CHOICES,
+    DIFFICULTY_CHOICES,
+)
 from interviews.serializers import (
     InterviewSessionListSerializer,
     InterviewSessionDetailSerializer,
@@ -11,6 +18,8 @@ from interviews.serializers import (
     InterviewQuestionBriefSerializer,
     InterviewEvaluationSerializer,
     AnswerSubmitSerializer,
+    ResumeSerializer,
+    ResumeUploadSerializer,
 )
 from interviews.services.interview_service import (
     start_session,
@@ -19,10 +28,12 @@ from interviews.services.interview_service import (
     complete_session,
     get_session_report,
     get_user_dashboard_analytics,
+    get_detailed_user_analytics,
     InvalidStateError,
     DuplicateAnswerError,
     InterviewServiceError,
 )
+from interviews.services.resume_parser_service import parse_resume_document
 
 
 # ─── Helper ───
@@ -50,6 +61,8 @@ class InterviewConfigView(APIView):
         profile = getattr(request.user, 'profile', None)
         default_role = profile.target_role if profile else 'Software Engineer'
 
+        active_resume = Resume.objects.filter(user=request.user, is_active=True).first()
+
         return Response({
             'interview_types': [
                 {'value': val, 'label': label}
@@ -71,8 +84,11 @@ class InterviewConfigView(APIView):
                 'Mobile Developer',
                 'Cloud Engineer',
             ],
-            'default_job_role': default_role,
+            'default_job_role': active_resume.target_role if active_resume and active_resume.target_role else default_role,
             'question_range': {'min': 3, 'max': 15, 'default': 5},
+            'has_active_resume': active_resume is not None,
+            'active_resume_id': active_resume.id if active_resume else None,
+            'active_resume_role': active_resume.target_role if active_resume else None,
         })
 
 
@@ -289,3 +305,150 @@ class DashboardAnalyticsView(APIView):
     def get(self, request):
         analytics = get_user_dashboard_analytics(request.user)
         return Response(analytics)
+
+
+class UserDetailedAnalyticsView(APIView):
+    """Get comprehensive user progress and analytics for the dedicated Progress & Analytics page."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        analytics = get_detailed_user_analytics(request.user)
+        return Response(analytics)
+
+
+# ─── Resume Views ───
+
+class ResumeUploadView(APIView):
+    """Upload and parse a resume document (PDF or DOCX)."""
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        serializer = ResumeUploadSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_file = serializer.validated_data['file']
+        file_name = uploaded_file.name
+        file_size = uploaded_file.size
+        lower_name = file_name.lower()
+        file_type = 'pdf' if lower_name.endswith('.pdf') else 'docx'
+
+        # Read file bytes in memory for extraction
+        try:
+            file_bytes = uploaded_file.read()
+        except Exception as exc:
+            return Response(
+                {'detail': f'Failed to read uploaded file: {exc}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Create resume record
+        resume = Resume.objects.create(
+            user=request.user,
+            file=uploaded_file,
+            file_name=file_name,
+            file_size=file_size,
+            file_type=file_type,
+            processing_status='processing',
+            is_active=True,
+        )
+
+        # Parse document and extract structured info
+        try:
+            parse_resume_document(resume, file_bytes)
+        except ValidationError as exc:
+            return Response(
+                {
+                    'detail': str(exc.message if hasattr(exc, 'message') else exc),
+                    'resume': ResumeSerializer(resume).data,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            return Response(
+                {
+                    'detail': f'Unexpected error parsing resume: {exc}',
+                    'resume': ResumeSerializer(resume).data,
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        resume.refresh_from_db()
+        return Response(
+            ResumeSerializer(resume).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ResumeListView(APIView):
+    """List all resumes uploaded by the current user."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        resumes = Resume.objects.filter(user=request.user)
+        serializer = ResumeSerializer(resumes, many=True)
+        return Response(serializer.data)
+
+
+class ActiveResumeView(APIView):
+    """Get the currently active resume for the current user."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        resume = Resume.objects.filter(user=request.user, is_active=True).first()
+        if not resume:
+            resume = Resume.objects.filter(user=request.user).first()
+
+        if not resume:
+            return Response({'resume': None})
+
+        return Response({'resume': ResumeSerializer(resume).data})
+
+
+class ResumeDetailView(APIView):
+    """Retrieve or delete a single resume owned by the current user."""
+    permission_classes = [IsAuthenticated]
+
+    def _get_resume(self, request, resume_id):
+        try:
+            return Resume.objects.get(pk=resume_id, user=request.user), None
+        except Resume.DoesNotExist:
+            return None, Response(
+                {'detail': 'Resume not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    def get(self, request, resume_id):
+        resume, err = self._get_resume(request, resume_id)
+        if err:
+            return err
+        return Response(ResumeSerializer(resume).data)
+
+    def delete(self, request, resume_id):
+        resume, err = self._get_resume(request, resume_id)
+        if err:
+            return err
+
+        was_active = resume.is_active
+
+        # Delete the stored file from disk safely
+        if resume.file:
+            try:
+                resume.file.delete(save=False)
+            except Exception:
+                pass
+
+        resume.delete()
+
+        # If deleted resume was active, set the latest remaining resume as active
+        if was_active:
+            next_active = Resume.objects.filter(user=request.user).first()
+            if next_active:
+                next_active.is_active = True
+                next_active.save(update_fields=['is_active'])
+
+        return Response(
+            {'detail': 'Resume deleted successfully.'},
+            status=status.HTTP_200_OK,
+        )

@@ -131,6 +131,35 @@ BUILTIN_QUESTIONS = {
             "How do you foster innovation while maintaining operational stability?",
         ],
     },
+    'resume': {
+        'easy': [
+            "Walk me through the highlights of your resume and your primary areas of expertise.",
+            "Can you tell me about the most recent project listed on your resume and your role in it?",
+            "Which programming language or framework on your resume are you most confident with and why?",
+            "How did your education or coursework prepare you for the technical projects you've undertaken?",
+            "Describe the tools and environment you use on a daily basis for development.",
+            "Tell me about a specific feature you developed in one of your listed projects.",
+            "What motivated you to work on the projects listed in your portfolio?",
+        ],
+        'medium': [
+            "Looking at your projects, walk me through an architectural decision you made and what trade-offs you considered.",
+            "In your previous role or project, describe a challenging technical bug you diagnosed and fixed.",
+            "How do you approach testing, code quality, and documentation in the projects mentioned on your resume?",
+            "Can you explain how you designed the database schema or data layer for one of your listed projects?",
+            "Tell me about a time you had to learn a new technology or framework on short notice to deliver a project.",
+            "How did you handle performance, caching, or latency considerations in your featured projects?",
+            "Describe how you collaborated with peers or stakeholders during the execution of your key projects.",
+        ],
+        'hard': [
+            "If you were to completely re-architect your flagship project for 100x scale, what would you change and why?",
+            "Tell me about a critical technical trade-off you made in your work experience that had long-term implications.",
+            "Walk me through the deployment, CI/CD pipeline, and monitoring setup for the applications you built.",
+            "How did you address security, data integrity, and authentication vulnerabilities in your complex projects?",
+            "Describe an instance where a technical assumption in your project proved wrong in production, and how you recovered.",
+            "How did you lead or drive technical consensus among team members on key design decisions?",
+            "Looking across your experience, what is the most complex algorithmic or systems challenge you solved?",
+        ],
+    },
 }
 
 
