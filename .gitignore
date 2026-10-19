@@ -35,5 +35,7 @@ yarn-error.log*
 Thumbs.db
 
 # Agent and prompts
+AGENTS.md
+GEMINI.md
 prompts/
 agent/
