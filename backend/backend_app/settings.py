@@ -39,6 +39,8 @@ INSTALLED_APPS = [
 
     # Local apps
     'accounts.apps.AccountsConfig',
+    'interviews.apps.InterviewsConfig',
+    'coding.apps.CodingConfig',
 ]
 
 MIDDLEWARE = [

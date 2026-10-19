@@ -4,6 +4,8 @@
   flex-direction: column;
   gap: 24px;
   max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* ─── Row 1: Welcome + Stats ─── */
@@ -28,6 +30,12 @@
   overflow: hidden;
   position: relative;
 }
+
+[data-theme="dark"] .dash-welcome-card {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.16) 0%, rgba(6, 182, 212, 0.1) 50%, rgba(30, 41, 59, 0.8) 100%);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
 
 .dash-welcome-text {
   flex: 1;
@@ -153,10 +161,11 @@
 /* ─── Row 2: Interview Modes + Progress ─── */
 .dash-mid-row {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
   gap: 20px;
   align-items: start;
 }
+
 
 /* Section Shared */
 .dash-section-header {
@@ -371,6 +380,11 @@
   padding: 14px 16px;
 }
 
+[data-theme="dark"] .dash-motivational-card {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.16), rgba(6, 182, 212, 0.1));
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
 .dash-motivational-emoji {
   font-size: 28px;
   flex-shrink: 0;
@@ -396,10 +410,11 @@
 /* ─── Row 3: Performance + Activity ─── */
 .dash-bottom-row {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
   gap: 20px;
   align-items: start;
 }
+
 
 /* Performance Section */
 .dash-performance-section {
@@ -457,7 +472,7 @@
 .dash-perf-bar-track {
   width: 100%;
   height: 8px;
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -481,13 +496,13 @@
 }
 
 .dash-strengths-box {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background-color: var(--color-success-light);
+  border: 1px solid var(--color-success-border);
 }
 
 .dash-improve-box {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+  background-color: var(--color-error-light);
+  border: 1px solid var(--color-error-border);
 }
 
 .dash-insight-title {
@@ -515,12 +530,12 @@
 }
 
 .dash-insight-icon-green {
-  color: #16a34a;
+  color: var(--color-success);
   flex-shrink: 0;
 }
 
 .dash-insight-icon-red {
-  color: #dc2626;
+  color: var(--color-error);
   flex-shrink: 0;
 }
 
@@ -544,15 +559,15 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background-color: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background-color: var(--color-card-muted-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   transition: all 0.15s ease;
 }
 
 .dash-activity-item:hover {
-  background-color: #ffffff;
-  border-color: var(--color-border);
+  background-color: var(--color-surface);
+  border-color: var(--color-accent-indigo-border);
   box-shadow: var(--shadow-sm);
 }
 
@@ -588,7 +603,7 @@
 
 .dash-activity-date {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-secondary);
 }
 
 .dash-activity-score-col {
@@ -613,11 +628,12 @@
 .dash-activity-feedback-link {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-accent-indigo);
   font-family: var(--font-sans);
   font-size: 11.5px;
   font-weight: 500;
+
   padding: 5px 10px;
   cursor: pointer;
   white-space: nowrap;

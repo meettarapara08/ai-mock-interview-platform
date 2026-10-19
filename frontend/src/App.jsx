@@ -8,6 +8,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import DesignSystem from './pages/DesignSystem';
+import InterviewSetup from './pages/InterviewSetup';
+import InterviewSession from './pages/InterviewSession';
+import InterviewResult from './pages/InterviewResult';
+import InterviewHistory from './pages/InterviewHistory';
+import CodingProblemsList from './pages/CodingProblemsList';
+import CodingWorkspace from './pages/CodingWorkspace';
 
 import './App.css';
 
@@ -26,13 +32,21 @@ export function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Profile />} />
 
-            {/* Placeholder routes for sidebar navigation */}
+            {/* Interview Module routes */}
+            <Route path="/interview/setup" element={<InterviewSetup />} />
+            <Route path="/interview/session/:id" element={<InterviewSession />} />
+            <Route path="/interview/result/:id" element={<InterviewResult />} />
+            <Route path="/history" element={<InterviewHistory />} />
+
+            {/* Friendly redirects for specific interview types */}
+            <Route path="/technical-interview" element={<Navigate to="/interview/setup?type=technical" replace />} />
+            <Route path="/behavioral-interview" element={<Navigate to="/interview/setup?type=behavioral" replace />} />
+            <Route path="/hr-interview" element={<Navigate to="/interview/setup?type=hr" replace />} />
+
+            {/* Other pending feature placeholders */}
             <Route path="/resume-interview" element={<PlaceholderPage title="Resume-Based Interview" />} />
-            <Route path="/technical-interview" element={<PlaceholderPage title="Technical Interview" />} />
-            <Route path="/behavioral-interview" element={<PlaceholderPage title="Behavioral Interview" />} />
-            <Route path="/hr-interview" element={<PlaceholderPage title="HR / Managerial Interview" />} />
-            <Route path="/coding-practice" element={<PlaceholderPage title="Coding Practice" />} />
-            <Route path="/history" element={<PlaceholderPage title="Interview History" />} />
+            <Route path="/coding-practice" element={<CodingProblemsList />} />
+            <Route path="/coding-practice/:slug" element={<CodingWorkspace />} />
             <Route path="/analytics" element={<PlaceholderPage title="Progress & Analytics" />} />
           </Route>
         </Route>

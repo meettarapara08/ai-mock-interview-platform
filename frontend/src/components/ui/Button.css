@@ -64,7 +64,7 @@
 
 /* Outline Variant */
 .btn-outline {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   color: var(--color-accent-indigo);
   border-color: var(--color-accent-indigo-border);
 }
@@ -80,9 +80,10 @@
 }
 
 .btn-outline.btn-secondary-outline:hover:not(:disabled) {
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   border-color: var(--color-secondary);
 }
+
 
 /* Disabled State */
 .btn:disabled,

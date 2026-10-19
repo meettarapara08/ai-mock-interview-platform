@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Play,
   FileText,
   Code2,
   User,
   Users,
+  Briefcase,
   ArrowRight,
   TrendingUp,
   Star,
@@ -15,6 +17,7 @@ import {
   Lightbulb,
   CheckCircle,
   ArrowUpRight,
+  Loader2,
 } from 'lucide-react';
 import {
   RadarChart,
@@ -30,52 +33,10 @@ import {
 
 import heroIllustration from '../assets/hero-illustration.jpg';
 import { useAuth } from '../context/AuthContext';
+import { getDashboardAnalytics } from '../api/interviews';
 import './Dashboard.css';
 
-/* ─── Static Data ─── */
-const STATS = [
-  {
-    id: 'total-interviews',
-    icon: FileText,
-    iconBg: '#eef2ff',
-    iconColor: '#4F46E5',
-    label: 'Total Interviews',
-    value: '12',
-    trend: '↑ 2 this week',
-    trendColor: '#16a34a',
-  },
-  {
-    id: 'avg-score',
-    icon: Star,
-    iconBg: '#fefce8',
-    iconColor: '#eab308',
-    label: 'Average Score',
-    value: '78%',
-    trend: '↑ 6% this week',
-    trendColor: '#16a34a',
-  },
-  {
-    id: 'practice-time',
-    icon: Clock,
-    iconBg: '#ecfeff',
-    iconColor: '#06b6d4',
-    label: 'Practice Time',
-    value: '6.5 hrs',
-    trend: '1.2 hrs this week',
-    trendColor: '#64748b',
-  },
-  {
-    id: 'streak',
-    icon: Flame,
-    iconBg: '#fff7ed',
-    iconColor: '#f97316',
-    label: 'Current Streak',
-    value: '5 days',
-    trend: '↑ 2 days',
-    trendColor: '#16a34a',
-  },
-];
-
+/* ─── Static Feature Modes & Tips ─── */
 const INTERVIEW_MODES = [
   {
     id: 'resume-based',
@@ -111,91 +72,13 @@ const INTERVIEW_MODES = [
   },
 ];
 
-const RADAR_DATA = [
-  { subject: 'Knowledge', value: 82, fullMark: 100 },
-  { subject: 'Relevance', value: 76, fullMark: 100 },
-  { subject: 'Communication', value: 78, fullMark: 100 },
-  { subject: 'Confidence', value: 74, fullMark: 100 },
-  { subject: 'Behavior', value: 74, fullMark: 100 },
-];
-
-const PERFORMANCE_BARS = [
-  { label: 'Knowledge', value: 82, color: '#4F46E5' },
-  { label: 'Relevance', value: 76, color: '#06b6d4' },
-  { label: 'Communication', value: 78, color: '#4F46E5' },
-  { label: 'Confidence', value: 74, color: '#f97316' },
-];
-
-const PROGRESS_DATA = [
-  { name: 'Technical', value: 78, color: '#4F46E5' },
-  { name: 'Behavioral', value: 65, color: '#06b6d4' },
-  { name: 'HR / Managerial', value: 60, color: '#f59e0b' },
-  { name: 'Coding', value: 85, color: '#16a34a' },
-];
-
-const PROGRESS_DONUT_DATA = [
-  { name: 'Completed', value: 72 },
-  { name: 'Remaining', value: 28 },
-];
-
-const STRENGTHS = [
-  'Good technical knowledge',
-  'Clear communication',
-  'Relevant answers',
-];
-
-const AREAS_TO_IMPROVE = [
-  'More confidence in answers',
-  'Better real-world examples',
-  'Improve explanation depth',
-];
-
-const RECENT_ACTIVITY = [
-  {
-    id: 'ra-1',
-    type: 'Technical Interview',
-    role: 'Python Developer',
-    date: 'Jun 1, 2026',
-    score: 82,
-    rarity: 'Rare',
-    icon: Code2,
-    iconBg: '#ecfeff',
-    iconColor: '#06b6d4',
-  },
-  {
-    id: 'ra-2',
-    type: 'Behavioral Interview',
-    role: 'Team Collaboration',
-    date: 'May 28, 2026',
-    score: 76,
-    rarity: 'Rare',
-    icon: User,
-    iconBg: '#f0fdf4',
-    iconColor: '#16a34a',
-  },
-  {
-    id: 'ra-3',
-    type: 'Resume-Based Interview',
-    role: 'Full Stack Developer',
-    date: 'May 25, 2026',
-    score: 88,
-    rarity: 'Rare',
-    icon: FileText,
-    iconBg: '#eef2ff',
-    iconColor: '#4F46E5',
-  },
-  {
-    id: 'ra-4',
-    type: 'HR / Managerial Interview',
-    role: 'Leadership',
-    date: 'May 20, 2026',
-    score: 70,
-    rarity: 'Rare',
-    icon: Users,
-    iconBg: '#fefce8',
-    iconColor: '#eab308',
-  },
-];
+const TYPE_CONFIG = {
+  technical: { icon: Code2, iconBg: '#ecfeff', iconColor: '#06b6d4' },
+  behavioral: { icon: User, iconBg: '#f0fdf4', iconColor: '#16a34a' },
+  hr: { icon: Users, iconBg: '#eef2ff', iconColor: '#4F46E5' },
+  managerial: { icon: Briefcase, iconBg: '#fefce8', iconColor: '#eab308' },
+  'resume-based': { icon: FileText, iconBg: '#eef2ff', iconColor: '#4F46E5' },
+};
 
 const QUICK_TIPS = [
   'Be clear and concise in your answers',
@@ -206,7 +89,33 @@ const QUICK_TIPS = [
 
 /* ─── Dashboard Component ─── */
 export function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
+
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchDashboard() {
+      try {
+        const data = await getDashboardAnalytics();
+        if (isMounted) {
+          setAnalytics(data);
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard analytics:', err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+    fetchDashboard();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -216,6 +125,100 @@ export function Dashboard() {
   };
 
   const userGreetingName = user?.first_name || user?.username || 'Candidate';
+
+  // Real Stats Mapping
+  const statCards = [
+    {
+      id: 'total-interviews',
+      icon: FileText,
+      iconBg: '#eef2ff',
+      iconColor: '#4F46E5',
+      label: 'Total Interviews',
+      value: analytics ? String(analytics.stats.total_interviews) : '0',
+      trend: analytics?.stats?.interviews_this_week
+        ? `↑ ${analytics.stats.interviews_this_week} this week`
+        : '0 this week',
+      trendColor: '#16a34a',
+    },
+    {
+      id: 'avg-score',
+      icon: Star,
+      iconBg: '#fefce8',
+      iconColor: '#eab308',
+      label: 'Average Score',
+      value:
+        analytics && analytics.stats.average_score > 0
+          ? `${analytics.stats.average_score}%`
+          : '—',
+      trend:
+        analytics && analytics.stats.avg_score_this_week > 0
+          ? `↑ ${analytics.stats.avg_score_this_week}% avg this week`
+          : 'Keep practicing',
+      trendColor: '#16a34a',
+    },
+    {
+      id: 'practice-time',
+      icon: Clock,
+      iconBg: '#ecfeff',
+      iconColor: '#06b6d4',
+      label: 'Practice Time',
+      value: analytics?.stats?.practice_time || '0 mins',
+      trend: `${analytics?.stats?.total_questions_answered ?? 0} questions`,
+      trendColor: '#64748b',
+    },
+    {
+      id: 'completion-rate',
+      icon: CheckCircle2,
+      iconBg: '#f0fdf4',
+      iconColor: '#16a34a',
+      label: 'Completion Rate',
+      value: `${analytics?.progress?.completion_rate ?? 0}%`,
+      trend: `${analytics?.stats?.completed_interviews ?? 0} completed`,
+      trendColor: '#16a34a',
+    },
+  ];
+
+  // Donut Chart Data
+  const donutData =
+    analytics &&
+    (analytics.progress.completed_count > 0 || analytics.progress.remaining_count > 0)
+      ? [
+          { name: 'Completed', value: analytics.progress.completed_count },
+          { name: 'Remaining', value: Math.max(0, analytics.progress.remaining_count) },
+        ]
+      : [
+          { name: 'Completed', value: 0 },
+          { name: 'Remaining', value: 1 },
+        ];
+
+  const categoryBreakdown = analytics?.progress?.category_breakdown || [
+    { name: 'Technical', value: 0, color: '#4F46E5' },
+    { name: 'Behavioral', value: 0, color: '#06b6d4' },
+    { name: 'HR Round', value: 0, color: '#f59e0b' },
+    { name: 'Managerial', value: 0, color: '#16a34a' },
+  ];
+
+  // Performance Radar & Bars
+  const radarData = analytics?.performance?.radar_data || [
+    { subject: 'Knowledge', value: 0, fullMark: 100 },
+    { subject: 'Relevance', value: 0, fullMark: 100 },
+    { subject: 'Completeness', value: 0, fullMark: 100 },
+    { subject: 'Communication', value: 0, fullMark: 100 },
+  ];
+
+  const performanceBars = analytics?.performance?.performance_bars || [
+    { label: 'Knowledge', value: 0, color: '#4F46E5' },
+    { label: 'Relevance', value: 0, color: '#06b6d4' },
+    { label: 'Completeness', value: 0, color: '#16a34a' },
+    { label: 'Communication', value: 0, color: '#f59e0b' },
+  ];
+
+  // Insights
+  const strengths = analytics?.insights?.strengths || [];
+  const areasToImprove = analytics?.insights?.areas_to_improve || [];
+
+  // Recent Activity
+  const recentActivity = analytics?.recent_activity || [];
 
   return (
     <div className="dashboard" id="dashboard-page">
@@ -230,7 +233,12 @@ export function Dashboard() {
               Ready to ace your next interview? Practice, get AI feedback,
               and build the skills you need for your dream job.
             </p>
-            <button type="button" className="dash-welcome-cta" id="start-interview-cta">
+            <button
+              type="button"
+              className="dash-welcome-cta"
+              id="start-interview-cta"
+              onClick={() => navigate('/interview/setup')}
+            >
               <Play size={16} />
               <span>Start New Interview</span>
             </button>
@@ -246,7 +254,7 @@ export function Dashboard() {
 
         {/* Stat Cards */}
         <div className="dash-stats-row">
-          {STATS.map((stat) => {
+          {statCards.map((stat) => {
             const Icon = stat.icon;
             return (
               <div className="dash-stat-card" key={stat.id} id={`stat-${stat.id}`}>
@@ -276,13 +284,36 @@ export function Dashboard() {
         <div className="dash-section" id="start-interview-section">
           <div className="dash-section-header">
             <h2 className="dash-section-title">Start an Interview</h2>
-            <p className="dash-section-subtitle">Choose a mode and start practicing with AI-powered feedback.</p>
+            <p className="dash-section-subtitle">
+              Choose a mode and start practicing with AI-powered feedback.
+            </p>
           </div>
           <div className="dash-modes-grid">
             {INTERVIEW_MODES.map((mode) => {
               const Icon = mode.icon;
+              const modeTypeMap = {
+                technical: 'technical',
+                behavioral: 'behavioral',
+                'hr-managerial': 'hr',
+                'resume-based': '',
+              };
+              const targetPath = modeTypeMap[mode.id]
+                ? `/interview/setup?type=${modeTypeMap[mode.id]}`
+                : '/interview/setup';
+
               return (
-                <div className="dash-mode-card" key={mode.id} id={`mode-${mode.id}`}>
+                <div
+                  className="dash-mode-card"
+                  key={mode.id}
+                  id={`mode-${mode.id}`}
+                  onClick={() => navigate(targetPath)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') navigate(targetPath);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div
                     className="dash-mode-icon-wrapper"
                     style={{ backgroundColor: mode.iconBg }}
@@ -291,7 +322,15 @@ export function Dashboard() {
                   </div>
                   <h3 className="dash-mode-title">{mode.title}</h3>
                   <p className="dash-mode-desc">{mode.description}</p>
-                  <button type="button" className="dash-mode-cta" aria-label={`Start ${mode.title}`}>
+                  <button
+                    type="button"
+                    className="dash-mode-cta"
+                    aria-label={`Start ${mode.title}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(targetPath);
+                    }}
+                  >
                     <ArrowRight size={18} />
                   </button>
                 </div>
@@ -304,7 +343,11 @@ export function Dashboard() {
         <div className="dash-progress-section" id="progress-section">
           <div className="dash-section-header-row">
             <h2 className="dash-section-title">Your Progress</h2>
-            <button type="button" className="dash-view-details-link">
+            <button
+              type="button"
+              className="dash-view-details-link"
+              onClick={() => navigate('/history')}
+            >
               View Details <ArrowRight size={14} />
             </button>
           </div>
@@ -316,7 +359,7 @@ export function Dashboard() {
                 <ResponsiveContainer width={160} height={160}>
                   <PieChart>
                     <Pie
-                      data={PROGRESS_DONUT_DATA}
+                      data={donutData}
                       cx="50%"
                       cy="50%"
                       innerRadius={55}
@@ -332,21 +375,25 @@ export function Dashboard() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="dash-donut-center-text">
-                  <span className="dash-donut-percent">72%</span>
+                  <span className="dash-donut-percent">
+                    {analytics?.progress?.completion_rate ?? 0}%
+                  </span>
                   <span className="dash-donut-label">Overall Progress</span>
                 </div>
               </div>
 
               {/* Legend */}
               <div className="dash-progress-legend">
-                {PROGRESS_DATA.map((item) => (
+                {categoryBreakdown.map((item) => (
                   <div className="dash-progress-legend-row" key={item.name}>
                     <span
                       className="dash-progress-legend-dot"
                       style={{ backgroundColor: item.color }}
                     />
                     <span className="dash-progress-legend-name">{item.name}</span>
-                    <span className="dash-progress-legend-val">{item.value}%</span>
+                    <span className="dash-progress-legend-val">
+                      {item.value > 0 ? `${item.value}%` : `${item.count} done`}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -356,8 +403,16 @@ export function Dashboard() {
             <div className="dash-motivational-card">
               <span className="dash-motivational-emoji" aria-hidden="true">🏆</span>
               <div className="dash-motivational-text">
-                <strong>Small steps make big progress!</strong>
-                <span>Keep practicing. You're doing great!</span>
+                <strong>
+                  {analytics?.stats?.completed_interviews && analytics.stats.completed_interviews > 0
+                    ? `${analytics.stats.completed_interviews} interviews completed!`
+                    : 'Small steps make big progress!'}
+                </strong>
+                <span>
+                  {analytics?.stats?.total_interviews && analytics.stats.total_interviews > 0
+                    ? 'Keep building confidence with targeted rounds.'
+                    : "Start your first mock interview to track progress!"}
+                </span>
               </div>
             </div>
           </div>
@@ -369,13 +424,15 @@ export function Dashboard() {
         {/* AI Performance Analysis */}
         <div className="dash-performance-section" id="performance-section">
           <h2 className="dash-section-title">AI Performance Analysis</h2>
-          <p className="dash-section-subtitle">Your performance across different evaluation dimensions.</p>
+          <p className="dash-section-subtitle">
+            Your performance across different evaluation dimensions.
+          </p>
 
           <div className="dash-perf-content">
             {/* Radar Chart */}
             <div className="dash-perf-radar">
               <ResponsiveContainer width="100%" height={220}>
-                <RadarChart data={RADAR_DATA} outerRadius={80}>
+                <RadarChart data={radarData} outerRadius={80}>
                   <PolarGrid stroke="#E2E8F0" />
                   <PolarAngleAxis
                     dataKey="subject"
@@ -401,16 +458,21 @@ export function Dashboard() {
 
             {/* Bar Metrics */}
             <div className="dash-perf-bars">
-              {PERFORMANCE_BARS.map((bar) => (
+              {performanceBars.map((bar) => (
                 <div className="dash-perf-bar-row" key={bar.label}>
                   <div className="dash-perf-bar-header">
                     <span className="dash-perf-bar-label">{bar.label}</span>
-                    <span className="dash-perf-bar-value">{bar.value}%</span>
+                    <span className="dash-perf-bar-value">
+                      {bar.value > 0 ? `${bar.value}%` : '—'}
+                    </span>
                   </div>
                   <div className="dash-perf-bar-track">
                     <div
                       className="dash-perf-bar-fill"
-                      style={{ width: `${bar.value}%`, backgroundColor: bar.color }}
+                      style={{
+                        width: `${bar.value}%`,
+                        backgroundColor: bar.color,
+                      }}
                     />
                   </div>
                 </div>
@@ -422,8 +484,8 @@ export function Dashboard() {
               <div className="dash-perf-insight-box dash-strengths-box">
                 <h4 className="dash-insight-title">Strengths</h4>
                 <ul className="dash-insight-list">
-                  {STRENGTHS.map((s) => (
-                    <li key={s} className="dash-insight-item dash-insight-strength">
+                  {strengths.map((s, idx) => (
+                    <li key={idx} className="dash-insight-item dash-insight-strength">
                       <CheckCircle2 size={14} className="dash-insight-icon-green" />
                       <span>{s}</span>
                     </li>
@@ -433,8 +495,8 @@ export function Dashboard() {
               <div className="dash-perf-insight-box dash-improve-box">
                 <h4 className="dash-insight-title">Areas to Improve</h4>
                 <ul className="dash-insight-list">
-                  {AREAS_TO_IMPROVE.map((a) => (
-                    <li key={a} className="dash-insight-item dash-insight-improve">
+                  {areasToImprove.map((a, idx) => (
+                    <li key={idx} className="dash-insight-item dash-insight-improve">
                       <AlertTriangle size={14} className="dash-insight-icon-red" />
                       <span>{a}</span>
                     </li>
@@ -449,37 +511,107 @@ export function Dashboard() {
         <div className="dash-activity-section" id="recent-activity-section">
           <div className="dash-section-header-row">
             <h2 className="dash-section-title">Recent Activity</h2>
-            <button type="button" className="dash-view-details-link">
+            <button
+              type="button"
+              className="dash-view-details-link"
+              onClick={() => navigate('/history')}
+            >
               View All <ArrowRight size={14} />
             </button>
           </div>
 
           <div className="dash-activity-list">
-            {RECENT_ACTIVITY.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div className="dash-activity-item" key={item.id} id={item.id}>
+            {recentActivity.length === 0 ? (
+              <div
+                style={{
+                  padding: '40px 16px',
+                  textAlign: 'center',
+                  color: 'var(--color-secondary)',
+                }}
+              >
+                <Clock size={32} style={{ margin: '0 auto 8px', color: '#94a3b8' }} />
+                <p style={{ margin: '0 0 12px', fontSize: '14px' }}>
+                  No interviews taken yet.
+                </p>
+                <button
+                  type="button"
+                  className="dash-welcome-cta"
+                  style={{
+                    margin: '0 auto',
+                    fontSize: '13px',
+                    padding: '8px 16px',
+                    display: 'inline-flex',
+                  }}
+                  onClick={() => navigate('/interview/setup')}
+                >
+                  <Play size={14} />
+                  <span>Start Your First Interview</span>
+                </button>
+              </div>
+            ) : (
+              recentActivity.map((item) => {
+                const conf = TYPE_CONFIG[item.interview_type] || {
+                  icon: Code2,
+                  iconBg: '#ecfeff',
+                  iconColor: '#06b6d4',
+                };
+                const Icon = conf.icon;
+                const isCompleted = item.status === 'completed';
+                const isInProgress = item.status === 'in_progress';
+
+                return (
                   <div
-                    className="dash-activity-icon-wrapper"
-                    style={{ backgroundColor: item.iconBg }}
+                    className="dash-activity-item"
+                    key={item.id}
+                    id={`activity-${item.id}`}
+                    onClick={() => {
+                      if (isCompleted) {
+                        navigate(`/interview/result/${item.id}`);
+                      } else if (isInProgress) {
+                        navigate(`/interview/session/${item.id}`);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <Icon size={18} style={{ color: item.iconColor }} />
+                    <div
+                      className="dash-activity-icon-wrapper"
+                      style={{ backgroundColor: conf.iconBg }}
+                    >
+                      <Icon size={18} style={{ color: conf.iconColor }} />
+                    </div>
+                    <div className="dash-activity-info">
+                      <span className="dash-activity-type">{item.type}</span>
+                      <span className="dash-activity-role">{item.role}</span>
+                      <span className="dash-activity-date">{item.date}</span>
+                    </div>
+                    <div className="dash-activity-score-col">
+                      <span className="dash-activity-score">
+                        {item.score !== null ? `${item.score}%` : '—'}
+                      </span>
+                      <span className="dash-activity-rarity">
+                        {item.status_display}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="dash-activity-feedback-link"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isCompleted) {
+                          navigate(`/interview/result/${item.id}`);
+                        } else if (isInProgress) {
+                          navigate(`/interview/session/${item.id}`);
+                        } else {
+                          navigate('/history');
+                        }
+                      }}
+                    >
+                      {isCompleted ? 'View Feedback' : 'Resume'}
+                    </button>
                   </div>
-                  <div className="dash-activity-info">
-                    <span className="dash-activity-type">{item.type}</span>
-                    <span className="dash-activity-role">{item.role}</span>
-                    <span className="dash-activity-date">{item.date}</span>
-                  </div>
-                  <div className="dash-activity-score-col">
-                    <span className="dash-activity-score">{item.score}%</span>
-                    <span className="dash-activity-rarity">{item.rarity}</span>
-                  </div>
-                  <button type="button" className="dash-activity-feedback-link">
-                    View Feedback
-                  </button>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

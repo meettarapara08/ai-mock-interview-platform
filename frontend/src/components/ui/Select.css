@@ -28,9 +28,14 @@
 }
 
 .form-select:disabled {
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.form-select option {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
 }
 
 .select-icon {
@@ -39,3 +44,4 @@
   color: var(--color-secondary);
   pointer-events: none;
 }
+

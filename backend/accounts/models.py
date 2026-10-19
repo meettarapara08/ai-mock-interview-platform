@@ -21,3 +21,37 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user.username}"
+
+
+NOTIFICATION_TYPE_CHOICES = [
+    ('system', 'System'),
+    ('interview', 'Interview'),
+    ('coding', 'Coding'),
+    ('achievement', 'Achievement'),
+]
+
+
+class Notification(models.Model):
+    """Represents a notification for a user."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+    )
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    notification_type = models.CharField(
+        max_length=30,
+        choices=NOTIFICATION_TYPE_CHOICES,
+        default='system',
+    )
+    is_read = models.BooleanField(default=False)
+    link = models.CharField(max_length=255, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.title}"
+

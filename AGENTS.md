@@ -42,7 +42,7 @@ For every implementation request:
 
 1. Read `AGENTS.md`.
 2. Read the skills explicitly mentioned by the user.
-3. Read clearly needed supporting skills from `.opencode/skills/`.
+3. Read clearly needed supporting skills from `.agent/skills/`.
 4. Inspect relevant existing code, configuration, and project structure.
 5. Ask a focused question only if the task has meaningful ambiguity.
 6. Create a detailed implementation prompt in `prompts/`.
@@ -69,7 +69,7 @@ For simple explanations or questions that do not require code changes, answer di
 
 Use project skills from:
 
-- `.opencode/skills/`
+- `.agent/skills/`
 
 Use only skills that exist in the project or that the user has explicitly approved creating. Do not invent existing skill files or assume their contents.
 

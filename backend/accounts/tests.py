@@ -107,3 +107,41 @@ class AccountsAuthTestCase(TestCase):
             content_type='application/json'
         )
         self.assertEqual(good_login.status_code, 200)
+
+    def test_notification_workflow(self):
+        # Register user
+        reg_resp = self.client.post('/api/auth/register/', self.register_data, content_type='application/json')
+        self.assertEqual(reg_resp.status_code, 201)
+
+        # Welcome notification should be created
+        list_resp = self.client.get('/api/notifications/')
+        self.assertEqual(list_resp.status_code, 200)
+        data = list_resp.json()
+        self.assertEqual(len(data['notifications']), 1)
+        self.assertEqual(data['unread_count'], 1)
+        self.assertIn("Welcome", data['notifications'][0]['title'])
+
+        notif_id = data['notifications'][0]['id']
+
+        # Unread count endpoint
+        count_resp = self.client.get('/api/notifications/unread-count/')
+        self.assertEqual(count_resp.status_code, 200)
+        self.assertEqual(count_resp.json()['unread_count'], 1)
+
+        # Mark single as read
+        read_resp = self.client.post(f'/api/notifications/{notif_id}/read/')
+        self.assertEqual(read_resp.status_code, 200)
+        self.assertTrue(read_resp.json()['notification']['is_read'])
+
+        count_resp2 = self.client.get('/api/notifications/unread-count/')
+        self.assertEqual(count_resp2.json()['unread_count'], 0)
+
+        # Mark all read endpoint
+        mark_all_resp = self.client.post('/api/notifications/mark-all-read/')
+        self.assertEqual(mark_all_resp.status_code, 200)
+
+        # Unauthenticated access
+        self.client.post('/api/auth/logout/')
+        unauth_resp = self.client.get('/api/notifications/')
+        self.assertEqual(unauth_resp.status_code, 403)
+

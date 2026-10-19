@@ -20,9 +20,9 @@ import './Sidebar.css';
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { label: 'Resume-Based Interview', icon: FileText, path: '/resume-interview' },
-  { label: 'Technical Interview', icon: Code2, path: '/technical-interview' },
-  { label: 'Behavioral Interview', icon: User, path: '/behavioral-interview' },
-  { label: 'HR / Managerial Interview', icon: Users, path: '/hr-interview' },
+  { label: 'Technical Interview', icon: Code2, path: '/interview/setup?type=technical' },
+  { label: 'Behavioral Interview', icon: User, path: '/interview/setup?type=behavioral' },
+  { label: 'HR / Managerial Interview', icon: Users, path: '/interview/setup?type=hr' },
   { label: 'Coding Practice', icon: Terminal, path: '/coding-practice' },
   { label: 'Interview History', icon: Clock, path: '/history' },
   { label: 'Progress & Analytics', icon: BarChart3, path: '/analytics' },
@@ -89,13 +89,19 @@ export function Sidebar({ isOpen = false, onClose }) {
       <nav className="sidebar-nav" aria-label="Main navigation">
         <ul className="sidebar-nav-list">
           {NAV_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path;
+            const currentFullPath = location.pathname + location.search;
+            const isActive = item.path.includes('?')
+              ? currentFullPath === item.path
+              : location.pathname === item.path;
             const Icon = item.icon;
+            const safeId = `nav-${item.path.split('?')[0].replace(/\//g, '').replace(/-/g, '_') || 'dashboard'}${
+              item.path.includes('?') ? '_' + item.path.split('?')[1].replace(/[=&]/g, '_') : ''
+            }`;
             return (
               <li key={item.path}>
                 <button
                   type="button"
-                  id={`nav-${item.path.replace(/\//g, '').replace(/-/g, '_') || 'dashboard'}`}
+                  id={safeId}
                   className={`sidebar-nav-item ${isActive ? 'sidebar-nav-active' : ''}`}
                   onClick={() => handleNavClick(item.path)}
                   aria-current={isActive ? 'page' : undefined}
