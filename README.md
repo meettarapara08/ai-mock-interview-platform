@@ -10,7 +10,7 @@ An AI-powered interview preparation and coding practice platform that helps stud
 - **Technical Interviews** — Data structures, algorithms, system design, and domain-specific questions
 - **Behavioral Interviews** — STAR-method questions with AI-powered feedback
 - **HR Interviews** — Common HR and managerial round preparation
-- **Resume-Based Interviews** — Questions generated from your uploaded resume *(coming soon)*
+- **Resume-Based Interviews** — Questions generated from your uploaded resume 
 - **Adaptive Follow-ups** — AI generates follow-up questions based on your previous answers
 - **AI Evaluation** — Detailed scoring with strengths, weaknesses, and improvement suggestions
 
