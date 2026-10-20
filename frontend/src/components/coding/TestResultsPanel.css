@@ -68,7 +68,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -124,7 +124,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background-color: #f1f5f9;
+  background-color: var(--color-card-muted-bg);
   border-bottom: 1px solid var(--color-border);
   overflow-x: auto;
 }
@@ -145,7 +145,7 @@
 }
 
 .test-case-tab-btn:hover {
-  background-color: #e2e8f0;
+  background-color: var(--color-hover-bg);
   color: var(--color-primary);
 }
 
@@ -182,7 +182,7 @@
 }
 
 .test-case-code-box {
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;

@@ -27,6 +27,9 @@
   --color-active-bg: #e2e8f0;
   --color-input-bg: #ffffff;
   --color-card-muted-bg: #f8fafc;
+  --color-bg-card: var(--color-surface);
+  --color-border-subtle: var(--color-border);
+  --color-background: var(--color-bg);
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -74,16 +77,25 @@
   --color-active-bg: #475569;
   --color-input-bg: #0f172a;
   --color-card-muted-bg: #141e33;
+  --color-bg-card: var(--color-surface);
+  --color-border-subtle: var(--color-border);
+  --color-background: var(--color-bg);
 
-  --color-accent-indigo-light: rgba(79, 70, 229, 0.18);
+  --color-accent-indigo: #818cf8;
+  --color-accent-indigo-hover: #a5b4fc;
+  --color-accent-indigo-light: rgba(99, 102, 241, 0.18);
   --color-accent-indigo-border: #6366f1;
+  --color-accent-cyan: #22d3ee;
   --color-accent-cyan-light: rgba(6, 182, 212, 0.18);
   --color-accent-cyan-border: #22d3ee;
-  --color-success-light: rgba(22, 163, 74, 0.18);
+  --color-success: #4ade80;
+  --color-success-light: rgba(34, 197, 94, 0.18);
   --color-success-border: #22c55e;
+  --color-warning: #fbbf24;
   --color-warning-light: rgba(245, 158, 11, 0.18);
   --color-warning-border: #f59e0b;
-  --color-error-light: rgba(220, 38, 38, 0.18);
+  --color-error: #f87171;
+  --color-error-light: rgba(239, 68, 68, 0.18);
   --color-error-border: #ef4444;
 
   --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.35);

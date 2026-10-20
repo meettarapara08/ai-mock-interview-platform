@@ -21,6 +21,7 @@ import {
   Compass,
   FileText,
   Layers,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -500,6 +501,32 @@ export function Header({ isMobileSidebarOpen = false, onToggleSidebar }) {
 
       {/* Right Side: Theme Toggle + Notification + User */}
       <div className="header-right">
+        {user?.is_staff && (
+          <button
+            type="button"
+            className="header-admin-quick-btn"
+            onClick={() => navigate('/admin')}
+            title="Open Admin Portal"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              backgroundColor: 'var(--color-accent-indigo-light, #eef2ff)',
+              color: 'var(--color-accent-indigo, #4f46e5)',
+              border: '1px solid var(--color-accent-indigo-border, #c7d2fe)',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              marginRight: '4px',
+            }}
+          >
+            <ShieldCheck size={15} />
+            <span>Admin</span>
+          </button>
+        )}
+
         {/* Dark/Light Mode Toggle */}
         <button
           type="button"
@@ -668,6 +695,21 @@ export function Header({ isMobileSidebarOpen = false, onToggleSidebar }) {
                 <Settings size={16} />
                 <span>Account Settings</span>
               </button>
+              {user?.is_staff && (
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    navigate('/admin');
+                  }}
+                  style={{ color: 'var(--color-accent-indigo, #4f46e5)', fontWeight: 600 }}
+                >
+                  <ShieldCheck size={16} />
+                  <span>Admin Portal</span>
+                </button>
+              )}
               <div className="dropdown-divider" />
               <button
                 type="button"

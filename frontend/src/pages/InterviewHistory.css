@@ -411,8 +411,8 @@
 }
 
 .status-in-progress {
-  background-color: #fffbeb;
-  color: #f59e0b;
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
 }
 
 .status-setup {

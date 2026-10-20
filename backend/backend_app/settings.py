@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'interviews.apps.InterviewsConfig',
     'coding.apps.CodingConfig',
+    'admin_panel.apps.AdminPanelConfig',
 ]
 
 MIDDLEWARE = [

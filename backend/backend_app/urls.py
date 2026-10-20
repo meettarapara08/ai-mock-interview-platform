@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/interviews/', include('interviews.urls')),
     path('api/coding/', include('coding.urls')),
     path('api/notifications/', include('accounts.notification_urls')),
+    path('api/admin/', include('admin_panel.urls')),
 ]
 
 if settings.DEBUG:

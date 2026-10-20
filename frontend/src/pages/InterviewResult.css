@@ -240,7 +240,7 @@
 
 .result-breakdown-track {
   height: 6px;
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -447,11 +447,11 @@
 
 .result-q-answer p {
   font-size: 13.5px;
-  color: var(--color-secondary);
+  color: var(--color-primary);
   line-height: 1.6;
   margin: 0;
   padding: 12px;
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--color-accent-indigo-border);
 }
@@ -485,7 +485,7 @@
 .result-q-score-bar-track {
   flex: 1;
   height: 5px;
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -505,11 +505,11 @@
 
 .result-q-feedback {
   font-size: 13px;
-  color: var(--color-secondary);
+  color: var(--color-primary);
   line-height: 1.6;
   margin: 8px 0 0;
   padding: 10px 14px;
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border-radius: var(--radius-sm);
 }
 

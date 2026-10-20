@@ -13,6 +13,7 @@ import {
   LogOut,
   BotMessageSquare,
   X,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
@@ -112,6 +113,33 @@ export function Sidebar({ isOpen = false, onClose }) {
               </li>
             );
           })}
+          {user?.is_staff && (
+            <li key="/admin" style={{ marginTop: '12px', borderTop: '1px solid var(--color-border, #e2e8f0)', paddingTop: '12px' }}>
+              <button
+                type="button"
+                id="nav-admin_portal"
+                className={`sidebar-nav-item ${location.pathname.startsWith('/admin') ? 'sidebar-nav-active' : ''}`}
+                onClick={() => handleNavClick('/admin')}
+                style={{
+                  color: 'var(--color-accent-indigo, #4f46e5)',
+                  backgroundColor: location.pathname.startsWith('/admin') ? 'var(--color-accent-indigo-light, #eef2ff)' : 'transparent',
+                  fontWeight: 600,
+                }}
+              >
+                <ShieldCheck size={18} className="sidebar-nav-icon" />
+                <span className="sidebar-nav-label">Admin Portal</span>
+                <span style={{
+                  fontSize: '10px',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  backgroundColor: 'var(--color-accent-indigo, #4f46e5)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  marginLeft: 'auto',
+                }}>STAFF</span>
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
 

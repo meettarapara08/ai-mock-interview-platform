@@ -30,7 +30,7 @@
   align-items: center;
   gap: 6px;
   border: 1px solid var(--color-border);
-  background-color: #f8fafc;
+  background-color: var(--color-surface);
   color: var(--color-primary);
   padding: 6px 12px;
   border-radius: var(--radius-pill);
@@ -41,8 +41,8 @@
 }
 
 .workspace-back-btn:hover {
-  background-color: #f1f5f9;
-  border-color: #cbd5e1;
+  background-color: var(--color-hover-bg);
+  border-color: var(--color-border);
 }
 
 .workspace-title-box {
@@ -102,7 +102,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -122,7 +122,7 @@
 }
 
 .workspace-tab-btn:hover {
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   color: var(--color-primary);
 }
 
@@ -141,7 +141,7 @@
 .problem-statement {
   font-size: 15px;
   line-height: 1.6;
-  color: #334155;
+  color: var(--color-primary);
   white-space: pre-line;
 }
 
@@ -162,24 +162,24 @@
 
 .problem-io-block p {
   font-size: 13px;
-  color: #475569;
+  color: var(--color-secondary);
   margin: 0;
   line-height: 1.5;
 }
 
 .constraints-code-box {
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   font-size: 13px;
-  color: #334155;
+  color: var(--color-primary);
   font-family: 'Fira Code', monospace;
   white-space: pre-wrap;
 }
 
 .example-card {
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
@@ -205,7 +205,7 @@
 .io-label {
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-secondary);
   min-width: 50px;
 }
 
@@ -214,14 +214,14 @@
   border: none;
   font-family: 'Fira Code', monospace;
   font-size: 13px;
-  color: #0f172a;
+  color: var(--color-primary);
   margin: 0;
 }
 
 .example-explanation {
   margin-top: 6px;
   font-size: 13px;
-  color: #475569;
+  color: var(--color-secondary);
 }
 
 /* Submissions tab table */
@@ -234,7 +234,7 @@
 .submissions-table th {
   padding: 10px 12px;
   text-align: left;
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   color: var(--color-secondary);
   font-weight: 600;
   border-bottom: 1px solid var(--color-border);
@@ -243,6 +243,7 @@
 .submissions-table td {
   padding: 12px;
   border-bottom: 1px solid var(--color-border);
+  color: var(--color-primary);
 }
 
 .sub-status-pill {
@@ -281,7 +282,7 @@
 }
 
 .view-sub-btn:hover {
-  background-color: #e2e8f0;
+  background-color: var(--color-hover-bg);
   color: var(--color-primary);
 }
 

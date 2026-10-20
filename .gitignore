@@ -39,3 +39,5 @@ AGENTS.md
 GEMINI.md
 prompts/
 agent/
+*.txt
+!requirements.txt

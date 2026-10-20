@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from interviews.models import (
     InterviewSession,
     Resume,
+    JobRole,
     INTERVIEW_TYPE_CHOICES,
     DIFFICULTY_CHOICES,
 )
@@ -63,6 +64,22 @@ class InterviewConfigView(APIView):
 
         active_resume = Resume.objects.filter(user=request.user, is_active=True).first()
 
+        # Suggested job roles from JobRole model with fallback
+        db_roles = list(JobRole.objects.filter(is_active=True).values_list('title', flat=True))
+        fallback_roles = [
+            'Software Engineer',
+            'Frontend Developer',
+            'Backend Developer',
+            'Full Stack Developer',
+            'Data Scientist',
+            'DevOps Engineer',
+            'Product Manager',
+            'QA Engineer',
+            'Mobile Developer',
+            'Cloud Engineer',
+        ]
+        suggested_roles = db_roles if db_roles else fallback_roles
+
         return Response({
             'interview_types': [
                 {'value': val, 'label': label}
@@ -72,18 +89,7 @@ class InterviewConfigView(APIView):
                 {'value': val, 'label': label}
                 for val, label in DIFFICULTY_CHOICES
             ],
-            'suggested_job_roles': [
-                'Software Engineer',
-                'Frontend Developer',
-                'Backend Developer',
-                'Full Stack Developer',
-                'Data Scientist',
-                'DevOps Engineer',
-                'Product Manager',
-                'QA Engineer',
-                'Mobile Developer',
-                'Cloud Engineer',
-            ],
+            'suggested_job_roles': suggested_roles,
             'default_job_role': active_resume.target_role if active_resume and active_resume.target_role else default_role,
             'question_range': {'min': 3, 'max': 15, 'default': 5},
             'has_active_resume': active_resume is not None,

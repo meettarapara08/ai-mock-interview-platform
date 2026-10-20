@@ -357,7 +357,7 @@
   font-size: 11px;
   padding: 3px 8px;
   border-radius: var(--radius-sm);
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   border: 1px solid var(--color-border);
   color: var(--color-secondary);
   cursor: pointer;
@@ -390,14 +390,14 @@
   justify-content: center;
   gap: 6px;
   padding: 10px 4px;
-  background-color: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background-color: var(--color-card-muted-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   transition: all 0.15s ease;
 }
 
 .icon-card:hover {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-color: var(--color-accent-indigo-border);
   box-shadow: var(--shadow-sm);
 }

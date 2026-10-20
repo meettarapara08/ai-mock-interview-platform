@@ -50,6 +50,6 @@
 /* HR */
 .chip-hr {
   background-color: var(--color-warning-light);
-  color: #d97706;
+  color: var(--color-warning);
   border-color: var(--color-warning-border);
 }

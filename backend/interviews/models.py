@@ -231,3 +231,22 @@ class QuestionBank(models.Model):
 
     def __str__(self):
         return f"[{self.get_interview_type_display()}/{self.difficulty}] {self.question_text[:60]}"
+
+
+class JobRole(models.Model):
+    """Job role available for interview practice and skill evaluation."""
+    title = models.CharField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=150, unique=True)
+    category = models.CharField(max_length=100, default='Engineering')
+    description = models.TextField(blank=True, default='')
+    skills = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+

@@ -150,7 +150,7 @@
 
 .session-progress-track {
   height: 6px;
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -247,7 +247,7 @@
   line-height: 1.6;
   resize: vertical;
   min-height: 120px;
-  background-color: #fafbfc;
+  background-color: var(--color-input-bg);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -370,7 +370,7 @@
 
 .feedback-score-track {
   height: 6px;
-  background-color: #f1f5f9;
+  background-color: var(--color-hover-bg);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -383,11 +383,11 @@
 
 .feedback-text {
   font-size: 13.5px;
-  color: var(--color-secondary);
+  color: var(--color-primary);
   line-height: 1.6;
   margin: 0;
   padding: 12px 16px;
-  background-color: #f8fafc;
+  background-color: var(--color-card-muted-bg);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-accent-indigo);
 }

@@ -30,10 +30,12 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
+            'is_staff',
+            'is_superuser',
             'date_joined',
             'profile',
         ]
-        read_only_fields = ['id', 'date_joined']
+        read_only_fields = ['id', 'date_joined', 'is_staff', 'is_superuser']
 
 class UserRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)

@@ -16,6 +16,13 @@ import CodingProblemsList from './pages/CodingProblemsList';
 import CodingWorkspace from './pages/CodingWorkspace';
 import ResumeInterview from './pages/ResumeInterview';
 import Analytics from './pages/Analytics';
+import AdminProtectedRoute from './components/auth/AdminProtectedRoute';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminQuestions from './pages/admin/AdminQuestions';
+import AdminRoles from './pages/admin/AdminRoles';
+import AdminCoding from './pages/admin/AdminCoding';
 
 import './App.css';
 
@@ -50,6 +57,17 @@ export function App() {
             <Route path="/coding-practice" element={<CodingProblemsList />} />
             <Route path="/coding-practice/:slug" element={<CodingWorkspace />} />
             <Route path="/analytics" element={<Analytics />} />
+          </Route>
+        </Route>
+
+        {/* Admin Portal Protected Routes */}
+        <Route element={<AdminProtectedRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/questions" element={<AdminQuestions />} />
+            <Route path="/admin/roles" element={<AdminRoles />} />
+            <Route path="/admin/coding" element={<AdminCoding />} />
           </Route>
         </Route>
 

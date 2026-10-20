@@ -134,6 +134,10 @@
   box-shadow: 0 0 0 1px var(--type-color);
 }
 
+[data-theme="dark"] .setup-type-selected {
+  background-color: var(--color-hover-bg);
+}
+
 .setup-type-icon {
   width: 48px;
   height: 48px;

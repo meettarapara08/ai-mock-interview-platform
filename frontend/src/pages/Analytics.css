@@ -123,8 +123,8 @@
   gap: 6px;
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-subtle);
-  background: #ffffff;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   color: var(--color-primary);
   font-family: var(--font-sans);
   font-size: 13px;
@@ -134,8 +134,8 @@
 }
 
 .analytics-refresh-btn:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--color-hover-bg);
+  border-color: var(--color-border);
 }
 
 .analytics-refresh-btn:disabled {
@@ -204,7 +204,7 @@
 .kpi-label {
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-secondary);
 }
 
 .kpi-icon-badge {
@@ -281,7 +281,7 @@
 
 .chart-card-subtitle {
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-secondary);
   margin: 4px 0 0 0;
 }
 
